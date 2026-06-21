@@ -1,79 +1,75 @@
-import { useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
+import React, { useEffect } from 'react'
+import { X } from 'lucide-react'
 import { cn } from '../../utils/cn'
 
-export interface ModalProps {
+interface ModalProps {
   isOpen: boolean
   onClose: () => void
-  title?: string
+  title: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
-  closeOnOverlayClick?: boolean
-  children: React.ReactNode
   footer?: React.ReactNode
+  children: React.ReactNode
 }
 
-export const Modal = ({
-  isOpen,
-  onClose,
-  title,
-  size = 'md',
-  closeOnOverlayClick = true,
-  children,
-  footer
-}: ModalProps) => {
-  const overlayRef = useRef<HTMLDivElement>(null)
-
+export function Modal({ isOpen, onClose, title, size = 'md', footer, children }: ModalProps) {
   useEffect(() => {
+    if (!isOpen) return
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) onClose()
+      if (e.key === 'Escape') onClose()
     }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
   }, [isOpen, onClose])
 
   if (!isOpen) return null
 
-  const sizes = {
-    sm: 'max-w-[400px]',
-    md: 'max-w-[560px]',
-    lg: 'max-w-[720px]',
-    xl: 'max-w-[900px]'
+  const sizeClasses = {
+    sm: 'max-w-md w-full',
+    md: 'max-w-lg w-full',
+    lg: 'max-w-2xl w-full',
+    xl: 'max-w-5xl w-full',
   }
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (closeOnOverlayClick && e.target === overlayRef.current) {
-      onClose()
-    }
-  }
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 animate-fade-in"
+        onClick={onClose}
+      />
 
-  return createPortal(
-    <div
-      ref={overlayRef}
-      onMouseDown={handleOverlayClick}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
-    >
+      {/* Modal Container */}
       <div
         className={cn(
-          "w-full bg-[var(--color-bg-floating)] border border-[var(--color-border-default)] rounded-[var(--radius-xl)] shadow-2xl flex flex-col",
-          "animate-in zoom-in-95 duration-150 ease-out",
-          sizes[size]
+          'relative bg-[var(--color-bg-floating)] border border-[var(--color-border-strong)]/40 rounded-[var(--radius-2xl)] shadow-2xl flex flex-col overflow-hidden max-h-[90vh] z-10 transition-all duration-300 transform scale-100 animate-slide-up',
+          sizeClasses[size]
         )}
       >
-        {title && (
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border-subtle)]">
-            <h2 className="text-lg font-semibold text-[var(--color-text-primary)]">{title}</h2>
-          </div>
-        )}
-        <div className="p-6 overflow-y-auto max-h-[70vh] scrollbar-custom">
+        {/* Header */}
+        <div className="h-[52px] px-5 flex items-center justify-between border-b border-[var(--color-border-subtle)]/30 shrink-0">
+          <h3 className="text-[14px] font-semibold text-[var(--color-text-primary)] tracking-wide">
+            {title}
+          </h3>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-md hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--color-accent-primary)]"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto scrollbar-custom p-5 text-[13px] text-[var(--color-text-secondary)] leading-relaxed">
           {children}
         </div>
+
+        {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-[var(--color-border-subtle)] bg-[var(--color-bg-elevated)] rounded-b-[var(--radius-xl)]">
+          <div className="h-[56px] px-5 bg-[var(--color-bg-elevated)]/20 border-t border-[var(--color-border-subtle)]/30 flex items-center justify-end gap-2 shrink-0">
             {footer}
           </div>
         )}
       </div>
-    </div>,
-    document.body
+    </div>
   )
 }

@@ -1,34 +1,12 @@
-export type SectionName =
-  | 'characters'
-  | 'sub-series'
-  | 'lore'
-  | 'writing'
-  | 'relationships'
-  | 'verse-map'
-  | 'ai'
-  | 'tools'
-  | 'writing-guidelines'
-  | 'settings'
+export type Theme = 'light' | 'dark' | 'system' | 'darker' | 'midnight'
 
-export type ContentType =
-  | 'verse'
-  | 'character'
-  | 'lore'
-  | 'writing'
-  | 'relationship'
-  | 'conversation'
-  | 'tool'
+export type FontSize = 'default' | 'sm' | 'md' | 'lg' | 'compact' | 'relaxed'
 
-export type Theme = 'dark' | 'darker' | 'midnight'
-
-export type FontSize = 'compact' | 'default' | 'relaxed'
-
-export type ToastType = 'success' | 'error' | 'warning' | 'info'
+export type SectionName = string
 
 export interface Toast {
   id: string
-  type: ToastType
   title: string
-  description?: string
+  type: 'success' | 'error' | 'warning' | 'info'
   duration?: number
 }

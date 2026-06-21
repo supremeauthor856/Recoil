@@ -1,3 +1,4 @@
+import React from 'react'
 import { cn } from '../../utils/cn'
 
 export interface DividerProps {
@@ -5,16 +6,16 @@ export interface DividerProps {
   className?: string
 }
 
-export const Divider = ({ label, className }: DividerProps) => {
-  if (label) {
-    return (
-      <div className={cn("flex items-center gap-4 py-2", className)}>
-        <div className="flex-1 border-t border-[var(--color-border-subtle)]"></div>
-        <span className="text-[12px] text-[var(--color-text-muted)] tracking-wider uppercase font-medium">{label}</span>
-        <div className="flex-1 border-t border-[var(--color-border-subtle)]"></div>
-      </div>
-    )
-  }
-
-  return <div className={cn("w-full border-t border-[var(--color-border-subtle)] my-2", className)} />
+export function Divider({ label, className }: DividerProps) {
+  return (
+    <div className={cn('relative flex py-2 items-center w-full select-none', className)}>
+      <div className="flex-grow border-t border-[var(--color-border-subtle)]/50" />
+      {label && (
+        <span className="flex-shrink mx-4 text-[10px] text-[var(--color-text-muted)] font-bold uppercase tracking-wider">
+          {label}
+        </span>
+      )}
+      <div className="flex-grow border-t border-[var(--color-border-subtle)]/50" />
+    </div>
+  )
 }

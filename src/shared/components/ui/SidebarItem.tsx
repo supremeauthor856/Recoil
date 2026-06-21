@@ -1,86 +1,89 @@
+import React from 'react'
 import { NavLink } from 'react-router-dom'
 import { cn } from '../../utils/cn'
+import { useUIStore } from '../../../store/uiStore'
 
-export interface SidebarItemProps {
+interface SidebarItemProps {
   label: string
   icon?: React.ReactNode
   to?: string
-  active?: boolean
   badge?: string | number
-  onClick?: () => void
   indent?: number
+  active?: boolean
+  onClick?: (e: React.MouseEvent) => void
 }
 
-export const SidebarItem = ({ label, icon, to, active, badge, onClick, indent = 0 }: SidebarItemProps) => {
+export function SidebarItem({
+  label,
+  icon,
+  to,
+  badge,
+  indent = 0,
+  active,
+  onClick,
+}: SidebarItemProps) {
+  const setLeftSidebarOpen = useUIStore(state => state.setLeftSidebarOpen)
   
-  const content = (isActiveClass = false) => {
-    const isActuallyActive = active || isActiveClass
-    return (
-      <>
-        {/* Custom border for active state using shadow to avoid layout shift */}
-        {isActuallyActive && <div className="absolute left-0 top-[4px] bottom-[4px] w-[3px] bg-[var(--color-accent-primary)] rounded-r-md" />}
-        
-        {icon && (
-          <div className={cn(
-            "w-4 h-4 flex items-center justify-center mr-2 relative z-10 transition-colors",
-            isActuallyActive ? "text-[var(--color-accent-primary)]" : "text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)]"
-          )}>
-            {icon}
-          </div>
-        )}
-        
-        <span className="flex-1 truncate text-left relative z-10">{label}</span>
-        
-        {badge !== undefined && (
-          <span className="ml-2 px-1.5 py-0.5 bg-[var(--color-bg-elevated)] text-[var(--color-text-muted)] text-[10px] rounded-full relative z-10">
-            {badge}
-          </span>
-        )}
-      </>
-    )
+  const getIndentStyle = () => {
+    if (indent === 1) return 'pl-7'
+    if (indent === 2) return 'pl-10'
+    return 'pl-3.5'
   }
 
-  const baseClasses = cn(
-    "group w-full h-[32px] flex items-center rounded-[var(--radius-md)] mx-2 pr-2 text-[14px] transition-colors relative cursor-pointer",
-    `pl-[${8 + (indent * 12)}px]`
+  const commonClass = cn(
+    'flex items-center justify-between gap-2.5 group h-[30px] pr-3.5 py-1.5 text-[12px] font-medium transition-all duration-150 select-none rounded-[var(--radius-md)] mx-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]',
+    getIndentStyle(),
+    active && 'bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-highlight)] hover:bg-[var(--color-accent-primary)]/15 font-semibold'
   )
 
-  // Use dynamic style logic for inline padding since tailwind arbitrary classes might not compile dynamically cleanly if they are missing in the JIT analysis
-  const inlineStyle = {
-    paddingLeft: `${8 + (indent * 12)}px`,
-    width: 'calc(100% - 16px)' // account for mx-2
+  const innerContent = (
+    <>
+      <div className="flex items-center gap-2.5 min-w-0">
+        {icon && (
+          <span className="shrink-0 text-[var(--color-text-muted)] group-hover:text-[var(--color-text-secondary)] transition-colors">
+            {icon}
+          </span>
+        )}
+        <span className="truncate">{label}</span>
+      </div>
+
+      {badge !== undefined && badge !== null && (
+        <span className="font-mono text-[9px] font-medium text-[var(--color-text-muted)] bg-[var(--color-bg-elevated)] min-w-[16px] h-4 rounded px-1 flex items-center justify-center border border-[var(--color-border-subtle)]/40 group-hover:bg-[var(--color-bg-hover)]">
+          {badge}
+        </span>
+      )}
+    </>
+  )
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (onClick) onClick(e)
+    if (window.innerWidth < 768) {
+      setLeftSidebarOpen(false)
+    }
   }
 
   if (to) {
     return (
-      <NavLink 
-        to={to} 
-        onClick={onClick}
-        style={inlineStyle}
-        className={({ isActive }) => cn(
-          baseClasses,
-          (active || isActive) 
-            ? "bg-[var(--color-bg-active)] text-[var(--color-text-primary)] font-medium" 
-            : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]"
-        )}
+      <NavLink
+        to={to}
+        onClick={handleClick}
+        className={({ isActive }) =>
+          cn(
+            'flex items-center justify-between gap-2.5 group h-[30px] pr-3.5 py-1.5 text-[12px] font-medium transition-all duration-150 select-none rounded-[var(--radius-md)] mx-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]',
+            getIndentStyle(),
+            (isActive || active) &&
+              'bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-highlight)] hover:bg-[var(--color-accent-primary)]/15 font-semibold'
+          )
+        }
       >
-        {({ isActive }) => content(isActive)}
+        {innerContent}
       </NavLink>
     )
   }
 
   return (
-    <button
-      onClick={onClick}
-      style={inlineStyle}
-      className={cn(
-        baseClasses,
-        active 
-          ? "bg-[var(--color-bg-active)] text-[var(--color-text-primary)] font-medium" 
-          : "text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]"
-      )}
-    >
-      {content()}
-    </button>
+    <div role="button" tabIndex={0} onClick={handleClick} onKeyDown={(e) => { if (e.key === 'Enter') handleClick(e as any) }} className={cn(commonClass, onClick && 'cursor-pointer', 'w-[calc(100%-8px)] text-left')}>
+      {innerContent}
+    </div>
   )
 }

@@ -1,29 +1,40 @@
-import { cn } from '../../utils/cn'
+import React from 'react'
 import { Button } from './Button'
+import { cn } from '../../utils/cn'
 
-export interface EmptyStateProps {
-  icon: React.ReactNode
+interface EmptyStateProps {
+  icon?: React.ReactNode
   title: string
-  description?: string
-  action?: { label: string; onClick: () => void }
+  description: string
+  action?: {
+    label: string
+    onClick: () => void
+    variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'dim'
+  }
   className?: string
 }
 
-export const EmptyState = ({ icon, title, description, action, className }: EmptyStateProps) => {
+export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
   return (
-    <div className={cn("flex flex-col items-center justify-center p-16 text-center w-full", className)}>
-      <div className="text-[var(--color-text-muted)] mb-4 flex items-center justify-center">
-        {/* We assume icon passed in handles its own size (e.g. 48px), wrapping it just in case */}
-        {icon}
-      </div>
-      <h3 className="text-xl font-semibold text-[var(--color-text-secondary)] mb-2">{title}</h3>
-      {description && (
-        <p className="text-base text-[var(--color-text-muted)] max-w-sm mb-6 leading-relaxed">
-          {description}
-        </p>
+    <div className={cn('flex flex-col items-center justify-center p-8 text-center max-w-sm mx-auto h-full min-h-[250px] animate-fade-in', className)}>
+      {icon && (
+        <div className="w-12 h-12 rounded-full bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)]/65 text-[var(--color-text-secondary)] flex items-center justify-center mb-4 shadow-sm">
+          {icon}
+        </div>
       )}
+      <h3 className="text-sm font-semibold text-[var(--color-text-primary)] mb-1">
+        {title}
+      </h3>
+      <p className="text-xs text-[var(--color-text-secondary)] leading-relaxed mb-6">
+        {description}
+      </p>
       {action && (
-        <Button variant="primary" onClick={action.onClick}>
+        <Button
+          variant={action.variant || 'secondary'}
+          size="sm"
+          onClick={action.onClick}
+          className="font-medium"
+        >
           {action.label}
         </Button>
       )}

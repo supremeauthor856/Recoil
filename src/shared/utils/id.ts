@@ -1,10 +1,3 @@
-export function generateId(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID()
-  }
-  return Date.now().toString(36) + Math.random().toString(36).slice(2)
-}
-
-export function generateTimestamp(): number {
-  return Date.now()
+export function generateId() {
+  return Math.random().toString(36).substring(2, 11)
 }

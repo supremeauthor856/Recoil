@@ -74,7 +74,7 @@
 }
 
 @layer base {
-  :root, .dark {
+  [data-theme="dark"], :root {
     --color-bg-rail: #09090F;
     --color-bg-sidebar: #0F0F1A;
     --color-bg-base: #13131F;
@@ -143,6 +143,159 @@
     --mobile-nav-height: 56px;
   }
 
+  /* Darker theme */
+  [data-theme="darker"] {
+    --color-bg-rail: #050507;
+    --color-bg-sidebar: #080810;
+    --color-bg-base: #0A0A12;
+    --color-bg-elevated: #111118;
+    --color-bg-floating: #17171F;
+    --color-bg-hover: #1F1F28;
+    --color-bg-active: #272733;
+    --color-bg-subtle: rgba(255, 255, 255, 0.02);
+
+    --color-accent-primary: #7B5EA7;
+    --color-accent-primary-hover: #8F6EC0;
+    --color-accent-primary-dim: rgba(123, 94, 167, 0.15);
+    --color-accent-secondary: #4F8AF4;
+    --color-accent-secondary-dim: rgba(79, 138, 244, 0.15);
+    --color-accent-highlight: #B97AFF;
+
+    --color-text-primary: #EEEEF8;
+    --color-text-secondary: #8080A0;
+    --color-text-muted: #4A4A62;
+    --color-text-disabled: #2F2F44;
+    --color-text-inverse: #050507;
+    --color-text-accent: #B97AFF;
+    --color-text-link: #4F8AF4;
+
+    --color-border-subtle: rgba(255, 255, 255, 0.03);
+    --color-border-default: rgba(255, 255, 255, 0.06);
+    --color-border-strong: rgba(255, 255, 255, 0.12);
+    --color-border-accent: rgba(123, 94, 167, 0.35);
+
+    --color-success: #4ADE80;
+    --color-success-dim: rgba(74, 222, 128, 0.12);
+    --color-warning: #FBBF24;
+    --color-warning-dim: rgba(251, 191, 36, 0.12);
+    --color-error: #F87171;
+    --color-error-dim: rgba(248, 113, 113, 0.12);
+    --color-info: #60A5FA;
+    --color-info-dim: rgba(96, 165, 250, 0.12);
+
+    --color-rel-romantic: #FF6B9D;
+    --color-rel-friendship: #60A5FA;
+    --color-rel-rivalry: #F87171;
+    --color-rel-family: #FFD166;
+    --color-rel-mentor: #4ADE80;
+    --color-rel-acquaintance: #6B7280;
+    --color-rel-enemy: #EF4444;
+    --color-rel-neutral: #9090A8;
+    --color-rel-complex: #C77DFF;
+    --color-rel-loyalty: #FB923C;
+    --color-rel-fear: #A855F7;
+    --color-rel-unspoken: #E879F9;
+
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+    --radius-full: 9999px;
+
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --rail-width: 72px;
+    --sidebar-width: 240px;
+    --header-height: 48px;
+    --status-bar-height: 48px;
+    --mobile-nav-height: 56px;
+  }
+
+  /* Midnight theme */
+  [data-theme="midnight"] {
+    --color-bg-rail: #020409;
+    --color-bg-sidebar: #050B14;
+    --color-bg-base: #070E1A;
+    --color-bg-elevated: #0D1520;
+    --color-bg-floating: #121B27;
+    --color-bg-hover: #182334;
+    --color-bg-active: #1E2B3F;
+    --color-bg-subtle: rgba(100, 140, 200, 0.03);
+
+    --color-accent-primary: #6B82CC;
+    --color-accent-primary-hover: #7E94DC;
+    --color-accent-primary-dim: rgba(107, 130, 204, 0.15);
+    --color-accent-secondary: #4B9EE8;
+    --color-accent-secondary-dim: rgba(75, 158, 232, 0.15);
+    --color-accent-highlight: #90C0FF;
+
+    --color-text-primary: #E0E8F8;
+    --color-text-secondary: #7090B8;
+    --color-text-muted: #405070;
+    --color-text-disabled: #242E3D;
+    --color-text-inverse: #020409;
+    --color-text-accent: #90C0FF;
+    --color-text-link: #4B9EE8;
+
+    --color-border-subtle: rgba(100, 140, 200, 0.05);
+    --color-border-default: rgba(100, 140, 200, 0.10);
+    --color-border-strong: rgba(100, 140, 200, 0.18);
+    --color-border-accent: rgba(107, 130, 204, 0.40);
+
+    --color-success: #4ADE80;
+    --color-success-dim: rgba(74, 222, 128, 0.12);
+    --color-warning: #FBBF24;
+    --color-warning-dim: rgba(251, 191, 36, 0.12);
+    --color-error: #F87171;
+    --color-error-dim: rgba(248, 113, 113, 0.12);
+    --color-info: #60A5FA;
+    --color-info-dim: rgba(96, 165, 250, 0.12);
+
+    --color-rel-romantic: #FF6B9D;
+    --color-rel-friendship: #60A5FA;
+    --color-rel-rivalry: #F87171;
+    --color-rel-family: #FFD166;
+    --color-rel-mentor: #4ADE80;
+    --color-rel-acquaintance: #6B7280;
+    --color-rel-enemy: #EF4444;
+    --color-rel-neutral: #9090A8;
+    --color-rel-complex: #C77DFF;
+    --color-rel-loyalty: #FB923C;
+    --color-rel-fear: #A855F7;
+    --color-rel-unspoken: #E879F9;
+
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+    --radius-xl: 12px;
+    --radius-2xl: 16px;
+    --radius-full: 9999px;
+
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --rail-width: 72px;
+    --sidebar-width: 240px;
+    --header-height: 48px;
+    --status-bar-height: 48px;
+    --mobile-nav-height: 56px;
+  }
+
+  /* Font size system */
+  [data-font="compact"] { font-size: 13px; }
+  [data-font="default"] { font-size: 14px; }
+  [data-font="relaxed"] { font-size: 15px; }
+
+  /* Reduced shadow/movement */
+  .reduce-motion, .reduce-motion * {
+    transition: none !important;
+    animation: none !important;
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+
   html {
     font-size: 14px;
   }
@@ -185,3 +338,153 @@
     }
   }
 }
+
+/* TipTap Prose Editor styling */
+.prose-editor .tiptap {
+  min-height: 100%;
+  outline: none;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.prose-editor .tiptap p {
+  margin-bottom: 1.25em;
+}
+
+.prose-editor .tiptap h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+.prose-editor .tiptap h2 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: var(--color-text-primary);
+  letter-spacing: -0.015em;
+}
+
+.prose-editor .tiptap h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  color: var(--color-text-primary);
+}
+
+.prose-editor .tiptap blockquote {
+  border-left: 3px solid var(--color-accent-primary);
+  padding-left: 1rem;
+  font-style: italic;
+  color: var(--color-text-secondary);
+  margin: 1.5em 0;
+}
+
+.prose-editor .tiptap ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25em;
+}
+
+.prose-editor .tiptap ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin-bottom: 1.25em;
+}
+
+.prose-editor .tiptap li {
+  margin-bottom: 0.5em;
+}
+
+.prose-editor .tiptap strong {
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.prose-editor .tiptap em {
+  font-style: italic;
+}
+
+/* Placeholder styling */
+.prose-editor .tiptap p.is-editor-empty:first-child::before {
+  color: var(--color-text-muted);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* AI Chat Markdown Typography */
+.markdown-body {
+  line-height: 1.6;
+}
+.markdown-body p {
+  margin-bottom: 0.75em;
+}
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  color: #ffffff;
+  letter-spacing: -0.015em;
+}
+.markdown-body h1 { 
+  font-size: 1.35em; 
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
+  padding-bottom: 0.25em; 
+}
+.markdown-body h2 { font-size: 1.25em; }
+.markdown-body h3 { font-size: 1.1em; }
+.markdown-body ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75em;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin-bottom: 0.75em;
+}
+.markdown-body li {
+  margin-bottom: 0.25em;
+}
+.markdown-body blockquote {
+  border-left: 2px solid var(--color-accent-primary, #7B5EA7);
+  padding-left: 0.75rem;
+  color: var(--color-text-secondary, #8E8EA8);
+  font-style: italic;
+  margin: 0.75em 0;
+}
+.markdown-body code {
+  font-family: var(--font-mono, monospace);
+  background-color: rgba(255, 255, 255, 0.06);
+  padding: 0.15em 0.35em;
+  border-radius: 4px;
+  font-size: 0.85em;
+  color: #fca5a5;
+}
+.markdown-body pre {
+  background-color: #0b0b14;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0.75rem;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 0.75em 0;
+}
+.markdown-body pre code {
+  background-color: transparent;
+  padding: 0;
+  color: #e2e8f0;
+  font-size: 0.9em;
+  border-radius: 0;
+}
+

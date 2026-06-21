@@ -1,0 +1,118 @@
+export type ForeshadowingStatus = 'planted' | 'pending-payoff' | 'resolved'
+
+export interface ForeshadowingEntry {
+  id: string
+  verse_id: string
+  description: string
+  planted_in: string | null
+  payoff_in: string | null
+  status: ForeshadowingStatus
+  notes: string | null
+  linked_writing_ids: string[]
+  created_at: number
+  updated_at: number
+}
+
+export const FORESHADOWING_STATUSES: ForeshadowingStatus[] = [
+  'planted', 'pending-payoff', 'resolved'
+]
+
+export const FORESHADOWING_STATUS_LABELS: Record<ForeshadowingStatus, string> = {
+  planted: 'Planted',
+  'pending-payoff': 'Pending Payoff',
+  resolved: 'Resolved',
+}
+
+export const FORESHADOWING_STATUS_COLORS: Record<ForeshadowingStatus, string> = {
+  planted: 'var(--color-accent-secondary)',
+  'pending-payoff': 'var(--color-warning)',
+  resolved: 'var(--color-success)',
+}
+
+export type ArcStatus = 'planned' | 'in-progress' | 'written' | 'complete'
+
+export interface StoryArc {
+  id: string
+  verse_id: string
+  sub_series_id: string | null
+  title: string
+  description: string | null
+  status: ArcStatus
+  sort_order: number
+  linked_writing_ids: string[]
+  linked_character_ids: string[]
+  tags: string[]
+  created_at: number
+  updated_at: number
+}
+
+export const ARC_STATUSES: ArcStatus[] = [
+  'planned', 'in-progress', 'written', 'complete'
+]
+
+export const ARC_STATUS_LABELS: Record<ArcStatus, string> = {
+  planned: 'Planned',
+  'in-progress': 'In Progress',
+  written: 'Written',
+  complete: 'Complete',
+}
+
+export const ARC_STATUS_COLORS: Record<ArcStatus, string> = {
+  planned: 'var(--color-text-muted)',
+  'in-progress': 'var(--color-accent-secondary)',
+  written: 'var(--color-accent-primary)',
+  complete: 'var(--color-success)',
+}
+
+export type CanonStatus = 'confirmed-canon' | 'soft-headcanon' | 'denied' | 'undecided'
+
+export interface Headcanon {
+  id: string
+  verse_id: string
+  character_id: string | null
+  content: string
+  canon_status: CanonStatus
+  notes: string | null
+  created_at: number
+  updated_at: number
+  // Client-only — enriched after fetch
+  character_name?: string
+}
+
+export const CANON_STATUSES: CanonStatus[] = [
+  'confirmed-canon', 'soft-headcanon', 'denied', 'undecided'
+]
+
+export const CANON_STATUS_LABELS: Record<CanonStatus, string> = {
+  'confirmed-canon': 'Confirmed Canon',
+  'soft-headcanon': 'Soft Headcanon',
+  denied: 'Denied',
+  undecided: 'Undecided',
+}
+
+export const CANON_STATUS_COLORS: Record<CanonStatus, string> = {
+  'confirmed-canon': 'var(--color-success)',
+  'soft-headcanon': 'var(--color-accent-secondary)',
+  denied: 'var(--color-error)',
+  undecided: 'var(--color-warning)',
+}
+
+export interface PlotHoleIssue {
+  type: 'contradiction' | 'inconsistency' | 'plot-hole' | 'character-inconsistency' | 'lore-conflict'
+  severity: 'high' | 'medium' | 'low'
+  title: string
+  description: string
+  affectedContent: string[]
+  suggestion: string
+}
+
+export interface PlotHoleAnalysis {
+  issues: PlotHoleIssue[]
+  summary: string
+  analysisDate: number
+  contextUsed: {
+    characterCount: number
+    loreEntryCount: number
+    writingCount: number
+  }
+}

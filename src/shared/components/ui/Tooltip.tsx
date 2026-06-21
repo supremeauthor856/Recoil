@@ -1,90 +1,59 @@
-import { useState, useRef, useEffect } from 'react'
-import { createPortal } from 'react-dom'
+import React, { useState, useEffect } from 'react'
 import { cn } from '../../utils/cn'
 
-export interface TooltipProps {
-  children: React.ReactNode
-  content: string
-  side?: 'top' | 'bottom' | 'left' | 'right'
-  delay?: number
+interface TooltipProps {
+  content: React.ReactNode
+  side?: 'top' | 'right' | 'bottom' | 'left'
+  children: React.ReactElement
 }
 
-export const Tooltip = ({ children, content, side = 'top', delay = 250 }: TooltipProps) => {
+export function Tooltip({ content, side = 'top', children }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false)
-  const [coords, setCoords] = useState({ x: 0, y: 0 })
-  const triggerRef = useRef<HTMLDivElement>(null)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  const handleMouseEnter = () => {
-    timeoutRef.current = setTimeout(() => {
-      if (triggerRef.current) {
-        const rect = triggerRef.current.getBoundingClientRect()
-        const OFFSET = 8
-        let x = 0, y = 0
-
-        // We will roughly center it, we can refine this with ResizeObserver later if needed
-        if (side === 'top') {
-          x = rect.left + rect.width / 2
-          y = rect.top - OFFSET
-        } else if (side === 'bottom') {
-          x = rect.left + rect.width / 2
-          y = rect.bottom + OFFSET
-        } else if (side === 'left') {
-          x = rect.left - OFFSET
-          y = rect.top + rect.height / 2
-        } else if (side === 'right') {
-          x = rect.right + OFFSET
-          y = rect.top + rect.height / 2
-        }
-
-        setCoords({ x, y })
-        setIsVisible(true)
-      }
-    }, delay)
-  }
-
-  const handleMouseLeave = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    setIsVisible(false)
-  }
+  const [isTouch, setIsTouch] = useState(false)
 
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    // Robust heuristic for touch to prevent tooltip intercepting first taps on mobile
+    const checkTouch = () => {
+      const hasTouchParams = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+      setIsTouch(hasTouchParams)
     }
+    checkTouch()
   }, [])
 
-  const translateClasses = {
-    top: '-translate-x-1/2 -translate-y-full',
-    bottom: '-translate-x-1/2',
-    left: '-translate-x-full -translate-y-1/2',
-    right: '-translate-y-1/2'
+  const sideStyle = {
+    top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
+    right: 'left-full top-1/2 -translate-y-1/2 ml-2',
+    bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
+    left: 'right-full top-1/2 -translate-y-1/2 mr-2',
+  }
+
+  const arrowStyle = {
+    top: 'top-full left-1/2 -translate-x-1/2 border-t-[var(--color-bg-floating)] border-x-transparent border-t-4 border-x-4',
+    right: 'right-full top-1/2 -translate-y-1/2 border-r-[var(--color-bg-floating)] border-y-transparent border-r-4 border-y-4',
+    bottom: 'bottom-full left-1/2 -translate-x-1/2 border-b-[var(--color-bg-floating)] border-x-transparent border-b-4 border-x-4',
+    left: 'left-full top-1/2 -translate-y-1/2 border-l-[var(--color-bg-floating)] border-y-transparent border-l-4 border-y-4',
   }
 
   return (
-    <>
-      <div 
-        ref={triggerRef} 
-        onMouseEnter={handleMouseEnter} 
-        onMouseLeave={handleMouseLeave} 
-        className="inline-block"
-      >
-        {children}
-      </div>
-      {isVisible && typeof document !== 'undefined' && createPortal(
-        <div 
+    <div
+      onMouseEnter={isTouch ? undefined : () => setIsVisible(true)}
+      onMouseLeave={isTouch ? undefined : () => setIsVisible(false)}
+      onFocus={isTouch ? undefined : () => setIsVisible(true)}
+      onBlur={isTouch ? undefined : () => setIsVisible(false)}
+      className="relative inline-flex items-center justify-center"
+    >
+      {children}
+      {isVisible && !isTouch && (
+        <div
           className={cn(
-            "fixed z-[9999] pointer-events-none px-2 py-1 bg-[var(--color-bg-floating)] border border-[var(--color-border-default)] rounded-[var(--radius-sm)] shadow-xl",
-            "text-[12px] text-[var(--color-text-secondary)] whitespace-nowrap max-w-[200px]",
-            "animate-in fade-in duration-100",
-            translateClasses[side]
+            'absolute z-50 px-2 py-1 bg-[var(--color-bg-floating)] border border-[var(--color-border-strong)]/30 text-white text-[10px] uppercase tracking-wider font-semibold rounded-[var(--radius-sm)] shadow-lg whitespace-nowrap pointer-events-none animate-fade-in',
+            sideStyle[side]
           )}
-          style={{ left: coords.x, top: coords.y }}
         >
           {content}
-        </div>,
-        document.body
+          <div className={cn('absolute w-0 h-0 border-solid', arrowStyle[side])} />
+        </div>
       )}
-    </>
+    </div>
   )
 }

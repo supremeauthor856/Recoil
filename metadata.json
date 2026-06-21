@@ -1,6 +1,6 @@
 {
-  "name": "",
-  "description": "",
+  "name": "Recoil",
+  "description": "A private creative writing and original character management application for creating OCs, building fictional universes (verses), and writing stories.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -6,7 +6,7 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "recoil-db"
-database_id = "PLACEHOLDER_REPLACE_WITH_REAL_ID"
+database_id = "2f09d44b-0d1b-450d-a805-f0aab170b2b7"
 
 [[r2_buckets]]
 binding = "R2"

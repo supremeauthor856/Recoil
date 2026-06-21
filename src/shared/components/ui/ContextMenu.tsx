@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
+import React, { useEffect, useRef } from 'react'
 import { cn } from '../../utils/cn'
 
 interface ContextMenuProps {
@@ -9,53 +8,47 @@ interface ContextMenuProps {
   children: React.ReactNode
 }
 
-export const ContextMenu = ({ x, y, onClose, children }: ContextMenuProps) => {
+export function ContextMenu({ x, y, onClose, children }: ContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         onClose()
       }
     }
-    document.addEventListener('mousedown', handleOutsideClick)
-    return () => document.removeEventListener('mousedown', handleOutsideClick)
+    // Bind the event listener on capture phase to ensure it runs before normal clicks handler
+    document.addEventListener('mousedown', handleClickOutside, true)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside, true)
+    }
   }, [onClose])
 
-  // Adjust position to stay in viewport
-  let posX = x
-  let posY = y
-  if (menuRef.current) {
-    const rect = menuRef.current.getBoundingClientRect()
-    if (x + rect.width > window.innerWidth) posX = window.innerWidth - rect.width - 8
-    if (y + rect.height > window.innerHeight) posY = window.innerHeight - rect.height - 8
+  // Prevent spilling off screen edges
+  const positionStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: `${Math.min(y, window.innerHeight - 150)}px`,
+    left: `${Math.min(x, window.innerWidth - 180)}px`,
   }
 
-  return createPortal(
+  return (
     <div
       ref={menuRef}
-      style={{ left: posX, top: posY }}
-      className="fixed z-50 bg-[var(--color-bg-floating)] border border-[var(--color-border-default)] rounded-[var(--radius-md)] shadow-xl py-1 min-w-[180px] animate-in fade-in zoom-in-95 duration-100"
+      style={positionStyle}
+      className="z-50 min-w-[150px] bg-[var(--color-bg-floating)] border border-[var(--color-border-strong)]/40 rounded-[var(--radius-lg)] p-1.5 shadow-xl animate-fade-in flex flex-col gap-0.5 select-none"
     >
       {children}
-    </div>,
-    document.body
+    </div>
   )
 }
 
-export const ContextMenuItem = ({ 
-  label, 
-  icon, 
-  shortcut, 
-  danger = false, 
-  onClick 
-}: { 
+interface ContextMenuItemProps {
   label: string
-  icon?: React.ReactNode
-  shortcut?: string
+  onClick: () => void
   danger?: boolean
-  onClick: () => void 
-}) => {
+}
+
+export function ContextMenuItem({ label, onClick, danger }: ContextMenuItemProps) {
   return (
     <button
       onClick={(e) => {
@@ -63,17 +56,17 @@ export const ContextMenuItem = ({
         onClick()
       }}
       className={cn(
-        "w-full h-[32px] px-3 flex items-center gap-2 text-base text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors",
-        danger ? "text-[var(--color-error)] hover:bg-[var(--color-error-dim)]" : "hover:bg-[var(--color-bg-hover)]"
+        'w-full text-left px-3 py-1.5 rounded-[var(--radius-sm)] text-[11px] font-medium transition-colors cursor-pointer focus:outline-none',
+        danger
+          ? 'text-[var(--color-error)] hover:bg-[var(--color-error)]/10'
+          : 'text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
       )}
     >
-      {icon && <span className="w-4 h-4 flex items-center justify-center pointer-events-none">{icon}</span>}
-      <span className="flex-1 text-left">{label}</span>
-      {shortcut && <span className="text-[11px] text-[var(--color-text-muted)] pointer-events-none">{shortcut}</span>}
+      {label}
     </button>
   )
 }
 
-export const ContextMenuSeparator = () => (
-  <div className="h-px bg-[var(--color-border-default)] my-1" />
-)
+export function ContextMenuSeparator() {
+  return <div className="border-t border-[var(--color-border-subtle)]/40 my-1 mx-1" />
+}
