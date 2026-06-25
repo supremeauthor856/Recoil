@@ -7,6 +7,7 @@ import { headcanonService } from '../../../services/headcanonService'
 import type { Headcanon, CanonStatus } from '../types'
 import { CANON_STATUSES, CANON_STATUS_LABELS, CANON_STATUS_COLORS } from '../types'
 import { cn } from '../../../shared/utils/cn'
+import { useUIStore } from '../../../store/uiStore'
 
 function formatRelativeTime(ts: number) {
   return new Date(ts).toLocaleString()
@@ -45,6 +46,7 @@ function HeadcanonCard({ entry, onEdit, onDelete }: { entry: Headcanon, onEdit: 
 
 export function HeadcanonVaultPage() {
   const { verseId = '' } = useParams<{ verseId: string }>()
+  const addToast = useUIStore(state => state.addToast)
   
   const [entries, setEntries] = useState<Headcanon[]>([])
   const [loading, setLoading] = useState(true)
@@ -73,15 +75,35 @@ export function HeadcanonVaultPage() {
     try {
       const added = await headcanonService.create({ verse_id: verseId, content })
       setEntries(prev => [added, ...prev])
+      addToast({
+        title: 'Headcanon added successfully',
+        type: 'success',
+      })
     } catch {
-      alert('Failed to add headcanon')
+      addToast({
+        title: 'Failed to add headcanon',
+        type: 'error',
+      })
     }
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete headcanon?')) return
-    await headcanonService.delete(id)
-    fetchHeadcanons()
+    const entry = entries.find(e => e.id === id)
+    const summary = entry ? (entry.content.length > 30 ? entry.content.slice(0, 30) + '...' : entry.content) : 'Headcanon'
+    try {
+      await headcanonService.delete(id)
+      fetchHeadcanons()
+      addToast({
+        title: `Deleted Headcanon '${summary}'`,
+        type: 'success',
+      })
+    } catch {
+      addToast({
+        title: `Failed to delete Headcanon '${summary}'`,
+        type: 'error',
+      })
+    }
   }
 
   const [editingEntry, setEditingEntry] = useState<Headcanon | null>(null)

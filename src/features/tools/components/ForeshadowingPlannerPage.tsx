@@ -9,9 +9,11 @@ import { foreshadowingService } from '../../../services/foreshadowingService'
 import type { ForeshadowingEntry, ForeshadowingStatus } from '../types'
 import { FORESHADOWING_STATUS_COLORS } from '../types'
 import { cn } from '../../../shared/utils/cn'
+import { useUIStore } from '../../../store/uiStore'
 
 export function ForeshadowingPlannerPage() {
   const { verseId = '' } = useParams<{ verseId: string }>()
+  const addToast = useUIStore(state => state.addToast)
   
   const [entries, setEntries] = useState<ForeshadowingEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -50,11 +52,20 @@ export function ForeshadowingPlannerPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this foreshadowing entry?')) return
+    const entry = entries.find(e => e.id === id)
+    const name = entry?.description || 'Foreshadowing Entry'
     try {
       await foreshadowingService.delete(id)
       fetchEntries()
+      addToast({
+        title: `Deleted Foreshadowing Entry '${name}'`,
+        type: 'success',
+      })
     } catch (err) {
-      alert('Failed to delete element')
+      addToast({
+        title: `Failed to delete Foreshadowing Entry '${name}'`,
+        type: 'error',
+      })
     }
   }
 

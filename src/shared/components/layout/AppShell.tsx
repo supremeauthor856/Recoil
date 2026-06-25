@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { VerseIconRail } from './VerseIconRail'
 import { LeftSidebar } from './LeftSidebar'
-import { GlobalCommandPalette } from './GlobalCommandPalette'
+import { Header } from './Header'
+import { SearchPalette } from '../ui/SearchPalette'
+import { ErrorBoundary } from '../error/ErrorBoundary'
 import { useUIStore } from '../../../store/uiStore'
 
 export function AppShell() {
   const { leftSidebarOpen, setLeftSidebarOpen } = useUIStore()
   const [isMobile, setIsMobile] = useState(false)
+  const location = useLocation()
 
   useEffect(() => {
     const handleResize = () => {
@@ -47,13 +50,21 @@ export function AppShell() {
         <LeftSidebar isMobile={isMobile} />
       </div>
 
-      {/* 3. Main Content Panel */}
-      <main className="flex-1 overflow-y-auto bg-[var(--color-bg-base)] relative scrollbar-custom min-w-0">
-        <Outlet />
-      </main>
+      {/* 3. Main Content Panel wrapper with persistent Header */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+        <Header />
+        
+        <main id="main-scroll-area" className="flex-1 overflow-y-auto bg-[var(--color-bg-base)] relative scrollbar-custom min-w-0">
+          <ErrorBoundary key={location.pathname}>
+            <div className="page-enter" style={{ height: '100%' }}>
+              <Outlet />
+            </div>
+          </ErrorBoundary>
+        </main>
+      </div>
 
       {/* Global Command Search Palette */}
-      <GlobalCommandPalette />
+      <SearchPalette />
     </div>
   )
 }

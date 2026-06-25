@@ -1,14 +1,17 @@
 import { createBrowserRouter, RouterProvider, useParams, useSearchParams } from 'react-router-dom'
 import { AppShell } from '../shared/components/layout/AppShell'
+import { ScrollToTop } from '../shared/components/layout/ScrollToTop'
 import { EmptyState } from '../shared/components/ui/EmptyState'
 import { LayoutDashboard } from 'lucide-react'
 import { DashboardPage } from '../features/verse/components/DashboardPage'
 import { VerseOverviewPage } from '../features/verse/components/VerseOverviewPage'
 import { SubSeriesOverviewPage } from '../features/verse/components/SubSeriesOverviewPage'
 import { CharacterDetailPage } from '../features/characters/components/CharacterDetailPage'
+import { CharacterListPage } from '../features/characters/components/CharacterListPage'
 import { RelationshipWebPage } from '../features/relationships'
 import { WritingListPage, WritingDetailPage } from '../features/writing'
 import { SettingsPage } from '../features/settings'
+import { LoreListPage, LoreEntryPage } from '../features/lore'
 import AIWorkspacePage from '../features/ai-chat'
 import { ImportPage } from '../features/import'
 import { LoreExpanderPage } from '../features/tools/components/LoreExpanderPage'
@@ -17,6 +20,10 @@ import { ArcStatusBoardPage } from '../features/tools/components/ArcStatusBoardP
 import { HeadcanonVaultPage } from '../features/tools/components/HeadcanonVaultPage'
 import { ChapterSummaryPage } from '../features/tools/components/ChapterSummaryPage'
 import { PlotHoleDetectorPage } from '../features/tools/components/PlotHoleDetectorPage'
+import { DialogueVoiceTrainerPage } from '../features/tools/components/DialogueVoiceTrainerPage'
+import { CharacterChemistryPage } from '../features/tools/components/CharacterChemistryPage'
+import { VersionHistoryPage } from '../features/tools/components/VersionHistoryPage'
+import { StatsDashboardPage } from '../features/statistics'
 
 // Placeholder Page
 const PlaceholderPage = ({ title: propTitle, description: propDescription }: { title?: string, description?: string }) => {
@@ -62,18 +69,24 @@ const PlaceholderPage = ({ title: propTitle, description: propDescription }: { t
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <AppShell />,
+    element: (
+      <>
+        <ScrollToTop />
+        <AppShell />
+      </>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'verse/:verseId', element: <VerseOverviewPage /> },
       { path: 'verse/:verseId/sub-series/:subSeriesId', element: <SubSeriesOverviewPage /> },
-      { path: 'verse/:verseId/characters', element: <PlaceholderPage title="Characters" description="Feature coming soon." /> },
+      { path: 'verse/:verseId/characters', element: <CharacterListPage /> },
       { path: 'verse/:verseId/characters/:characterId', element: <CharacterDetailPage /> },
-      { path: 'verse/:verseId/lore', element: <PlaceholderPage title="Lore" description="Feature coming soon." /> },
-      { path: 'verse/:verseId/lore/:entryId', element: <PlaceholderPage title="Lore Entry" description="Feature coming soon." /> },
+      { path: 'verse/:verseId/lore', element: <LoreListPage /> },
+      { path: 'verse/:verseId/lore/:id', element: <LoreEntryPage /> },
       { path: 'verse/:verseId/writing', element: <WritingListPage /> },
       { path: 'verse/:verseId/writing/:pieceId', element: <WritingDetailPage /> },
       { path: 'verse/:verseId/relationships', element: <RelationshipWebPage /> },
+      { path: 'verse/:verseId/stats', element: <StatsDashboardPage /> },
       { path: 'verse/:verseId/verse-map', element: <PlaceholderPage title="Verse Map" description="Feature coming soon." /> },
       { path: 'verse/:verseId/ai', element: <AIWorkspacePage /> },
       { path: 'verse/:verseId/import', element: <ImportPage /> },
@@ -83,6 +96,9 @@ const router = createBrowserRouter([
       { path: 'verse/:verseId/tools/headcanon-vault', element: <HeadcanonVaultPage /> },
       { path: 'verse/:verseId/tools/chapter-summary', element: <ChapterSummaryPage /> },
       { path: 'verse/:verseId/tools/plot-hole-detector', element: <PlotHoleDetectorPage /> },
+      { path: 'verse/:verseId/tools/voice-trainer', element: <DialogueVoiceTrainerPage /> },
+      { path: 'verse/:verseId/tools/chemistry-matrix', element: <CharacterChemistryPage /> },
+      { path: 'verse/:verseId/tools/version-history', element: <VersionHistoryPage /> },
       { path: 'verse/:verseId/tools/:toolName', element: <PlaceholderPage title="Tool" description="Feature coming soon." /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'settings/:section', element: <SettingsPage /> },

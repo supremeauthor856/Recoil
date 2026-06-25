@@ -7,6 +7,7 @@ import type { StoryArc, ArcStatus } from '../types'
 import { ARC_STATUSES, ARC_STATUS_LABELS, ARC_STATUS_COLORS } from '../types'
 import { cn } from '../../../shared/utils/cn'
 import { ArcCreateModal } from './ArcCreateModal'
+import { useUIStore } from '../../../store/uiStore'
 
 function ArcCard({ arc, onEdit, onDelete }: { arc: StoryArc, onEdit: (a: StoryArc) => void, onDelete: (id: string) => void }) {
   return (
@@ -51,6 +52,7 @@ function ArcCard({ arc, onEdit, onDelete }: { arc: StoryArc, onEdit: (a: StoryAr
 
 export function ArcStatusBoardPage() {
   const { verseId = '' } = useParams<{ verseId: string }>()
+  const addToast = useUIStore(state => state.addToast)
   
   const [arcs, setArcs] = useState<StoryArc[]>([])
   const [loading, setLoading] = useState(true)
@@ -102,8 +104,21 @@ export function ArcStatusBoardPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this story arc?')) return
-    await storyArcService.delete(id)
-    fetchArcs()
+    const arc = arcs.find(a => a.id === id)
+    const name = arc?.title || 'Story Arc'
+    try {
+      await storyArcService.delete(id)
+      fetchArcs()
+      addToast({
+        title: `Deleted Story Arc '${name}'`,
+        type: 'success',
+      })
+    } catch {
+      addToast({
+        title: `Failed to delete Story Arc '${name}'`,
+        type: 'error',
+      })
+    }
   }
 
   return (

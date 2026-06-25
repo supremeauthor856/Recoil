@@ -3,6 +3,7 @@ import { Providers } from './providers'
 import { AppRouter } from './Router'
 import { useUIStore } from '../store/uiStore'
 import { useSettingsStore } from '../store/settingsStore'
+import { ErrorBoundary } from '../shared/components/error/ErrorBoundary'
 import '../styles/globals.css' // Import styles explicitly
 
 export default function App() {
@@ -42,9 +43,38 @@ export default function App() {
     )
   }, [])
 
+  useEffect(() => {
+    function handleGlobalKeyDown(e: KeyboardEvent) {
+      // CMD+K or Ctrl+K — open search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        const activeEl = document.activeElement
+        const isInput = activeEl && (
+          activeEl.tagName === 'INPUT' || 
+          activeEl.tagName === 'TEXTAREA' || 
+          activeEl.getAttribute('contenteditable') === 'true' ||
+          activeEl.closest('[contenteditable="true"]')
+        )
+        if (isInput) return
+
+        e.preventDefault()
+        useUIStore.getState().openSearchPalette()
+      }
+
+      // Escape — close search palette if open (modals handle their own Escape)
+      if (e.key === 'Escape' && useUIStore.getState().searchPaletteOpen) {
+        useUIStore.getState().closeSearchPalette()
+      }
+    }
+
+    document.addEventListener('keydown', handleGlobalKeyDown)
+    return () => document.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [])
+
   return (
-    <Providers>
-      <AppRouter />
-    </Providers>
+    <ErrorBoundary>
+      <Providers>
+        <AppRouter />
+      </Providers>
+    </ErrorBoundary>
   )
 }

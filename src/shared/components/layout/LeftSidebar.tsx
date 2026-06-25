@@ -227,10 +227,10 @@ export const LeftSidebar = ({ isMobile }: LeftSidebarProps) => {
 
             {/* Lore Section */}
             <SidebarSection label="Lore & Worldbuilding">
-              <SidebarItem label="Timeline" icon={<Clock size={14} />} to={`/verse/${activeVerseId}/lore?category=timeline`} />
-              <SidebarItem label="Glossary" icon={<BookOpen size={14} />} to={`/verse/${activeVerseId}/lore?category=glossary`} />
-              <SidebarItem label="Factions & Groups" icon={<Shield size={14} />} to={`/verse/${activeVerseId}/lore?category=factions`} />
-              <SidebarItem label="Concepts & Rules" icon={<Lightbulb size={14} />} to={`/verse/${activeVerseId}/lore?category=concepts`} />
+              <SidebarItem label="Timeline" icon={<Clock size={14} />} to={`/verse/${activeVerseId}/lore?view=timeline`} />
+              <SidebarItem label="Glossary" icon={<BookOpen size={14} />} to={`/verse/${activeVerseId}/lore?view=glossary`} />
+              <SidebarItem label="Factions & Groups" icon={<Shield size={14} />} to={`/verse/${activeVerseId}/lore?category=faction`} />
+              <SidebarItem label="Concepts & Rules" icon={<Lightbulb size={14} />} to={`/verse/${activeVerseId}/lore?category=concept`} />
               <SidebarItem
                 label="All Lore"
                 icon={<Library size={14} />}
@@ -295,7 +295,7 @@ export const LeftSidebar = ({ isMobile }: LeftSidebarProps) => {
               <SidebarItem label="Voice Trainer" icon={<Mic size={14} />} to={`/verse/${activeVerseId}/tools/voice-trainer`} />
               <SidebarItem label="Chemistry Matrix" icon={<Grid size={14} />} to={`/verse/${activeVerseId}/tools/chemistry-matrix`} />
               <SidebarItem label="Version History" icon={<History size={14} />} to={`/verse/${activeVerseId}/tools/version-history`} />
-              <SidebarItem label="Verse Statistics" icon={<BarChart2 size={14} />} to={`/verse/${activeVerseId}/tools/verse-statistics`} />
+              <SidebarItem label="Verse Statistics" icon={<BarChart2 size={14} />} to={`/verse/${activeVerseId}/stats`} />
             </SidebarSection>
 
             {/* Guidelines */}

@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
-import { Pin, Star, Tags, AlertTriangle, Users, AlertCircle, Check } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { Pin, Star, Tags, AlertTriangle, Users, AlertCircle, Check, Library } from 'lucide-react'
 import { WritingPiece, WritingStatus, WRITING_STATUSES, WRITING_STATUS_LABELS } from '../types'
 import { Character } from '../../../shared/types/database'
+import { loreService } from '../../../services/loreService'
+import { LoreEntry } from '../../lore/types'
 
 interface WritingMetadataPanelProps {
   piece: WritingPiece
@@ -20,6 +22,33 @@ export const WritingMetadataPanel: React.FC<WritingMetadataPanelProps> = ({
   const [newWarning, setNewWarning] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
   const [saveNotify, setSaveNotify] = useState(false)
+
+  const [allLoreEntries, setAllLoreEntries] = useState<LoreEntry[]>([])
+
+  useEffect(() => {
+    if (piece.verse_id) {
+      loreService.getEntries(piece.verse_id)
+        .then(setAllLoreEntries)
+        .catch((err) => console.error('Failed to load lore entries for writing piece:', err))
+    }
+  }, [piece.verse_id])
+
+  const handleLoreLinkToggle = async (loreId: string) => {
+    const linked = piece.linked_lore_ids || []
+    const updated = linked.includes(loreId)
+      ? linked.filter((id) => id !== loreId)
+      : [...linked, loreId]
+
+    setIsUpdating(true)
+    try {
+      await onUpdatePiece({ linked_lore_ids: updated })
+      triggerSaveNotification()
+    } catch (err) {
+      console.error('Failed to toggle lore link:', err)
+    } finally {
+      setIsUpdating(false)
+    }
+  }
 
   const handleStatusChange = async (status: WritingStatus) => {
     setIsUpdating(true)
@@ -265,6 +294,44 @@ export const WritingMetadataPanel: React.FC<WritingMetadataPanelProps> = ({
                   }`}
                 >
                   <span className="truncate">{char.name}</span>
+                  {isLinked && <Check className="h-3.5 w-3.5 text-accent-highlight" />}
+                </button>
+              )
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Linked Lore */}
+      <div className="space-y-3">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
+          <Library className="h-3.5 w-3.5 text-text-muted" />
+          Linked Lore
+        </h4>
+        <div
+          id="meta-lore-grid"
+          className="max-h-40 border border-border-default rounded-md bg-bg-base/30 overflow-y-auto index-scroller p-2 space-y-1"
+        >
+          {allLoreEntries.length === 0 ? (
+            <p id="no-lore-warn" className="text-[10px] text-text-muted italic p-2 text-center">
+              No lore entries in this verse to link.
+            </p>
+          ) : (
+            allLoreEntries.map((lore) => {
+              const isLinked = (piece.linked_lore_ids || []).includes(lore.id)
+              return (
+                <button
+                  key={lore.id}
+                  id={`link-lore-${lore.id}`}
+                  onClick={() => handleLoreLinkToggle(lore.id)}
+                  disabled={isUpdating}
+                  className={`w-full flex items-center justify-between text-left rounded-md p-1.5 text-xs transition-colors cursor-pointer ${
+                    isLinked
+                      ? 'bg-accent-primary-dim/45 text-text-primary'
+                      : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary'
+                  }`}
+                >
+                  <span className="truncate">{lore.title}</span>
                   {isLinked && <Check className="h-3.5 w-3.5 text-accent-highlight" />}
                 </button>
               )

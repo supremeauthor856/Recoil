@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ExternalLink, Loader2, ArrowLeft, BookOpen, User, Shield, Compass } from 'lucide-react'
-import { getCharacter } from '../../../services/characterService'
+import { ExternalLink, Loader2, ArrowLeft, BookOpen, User, Shield, Compass, Edit3, Save, Check, X, RefreshCw, AlertCircle } from 'lucide-react'
+import { getCharacter, updateCharacter } from '../../../services/characterService'
 import { getCharacterRelationships } from '../../../services/relationshipService'
 import { Character } from '../../../shared/types/database'
 import { CharacterRelationship } from '../../relationships/types'
@@ -9,6 +9,16 @@ import { RelationshipTypeBadge } from '../../relationships/components/Relationsh
 import { RELATIONSHIP_COLORS_HEX } from '../../relationships/types'
 import { cn } from '../../../shared/utils/cn'
 import { ExportButton } from '../../export/components/ExportButton'
+import { SnapshotCreateModal } from '../../tools/components/SnapshotCreateModal'
+import { History } from 'lucide-react'
+
+// TipTap imports
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import Placeholder from '@tiptap/extension-placeholder'
+import CharacterCount from '@tiptap/extension-character-count'
+import { EditorToolbar } from '../../writing/components/EditorToolbar'
+import * as writingService from '../../../services/writingService'
 
 type TabType = 'wiki' | 'profile' | 'sheet'
 
@@ -25,6 +35,127 @@ export function CharacterDetailPage() {
   const [loadingChar, setLoadingChar] = useState(true)
   const [loadingRels, setLoadingRels] = useState(true)
   const [errorHeader, setErrorHeader] = useState<string | null>(null)
+
+  // Biography/Wiki edits using TipTap
+  const [isEditingWiki, setIsEditingWiki] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
+  const [lastSaved, setLastSaved] = useState<number | null>(null)
+
+  // Version snapshot state
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false)
+  const [versionSaveSuccess, setVersionSaveSuccess] = useState(false)
+
+  // Profile fields edits
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [profileName, setProfileName] = useState('')
+  const [profileSpecies, setProfileSpecies] = useState('')
+  const [profileAge, setProfileAge] = useState('')
+  const [profileRole, setProfileRole] = useState('')
+
+  // Sync profile fields from loaded character details
+  useEffect(() => {
+    if (character) {
+      setProfileName(character.name || '')
+      setProfileSpecies(character.species || '')
+      setProfileAge(character.age || '')
+      setProfileRole(character.role || '')
+    }
+  }, [character])
+
+  // Initialize TipTap editor for Character biography wiki lore
+  const wikiEditor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+        orderedList: {
+          keepMarks: true,
+          keepAttributes: false,
+        }
+      }),
+      Placeholder.configure({
+        placeholder: "Write this character's biography, origin story, and chronicle details here...",
+      }),
+      CharacterCount,
+    ],
+    content: character?.description || '',
+    editorProps: {
+      attributes: {
+        class: 'focus:outline-none max-w-none text-[var(--color-text-primary)] h-full min-h-[250px] text-sm leading-relaxed',
+      },
+    },
+  })
+
+  // Synchronize asynchronously loaded character content with TipTap editor
+  useEffect(() => {
+    if (wikiEditor && character && !isEditingWiki) {
+      const currentContent = wikiEditor.getHTML()
+      if (character.description !== currentContent) {
+        wikiEditor.commands.setContent(character.description || '', false)
+      }
+    }
+  }, [wikiEditor, character, isEditingWiki])
+
+  const handleSaveWiki = async () => {
+    if (!wikiEditor || !character) return
+    setSaveStatus('saving')
+    try {
+      const htmlContent = wikiEditor.getHTML()
+      await updateCharacter(character.id, { description: htmlContent })
+      
+      setCharacter(prev => prev ? { ...prev, description: htmlContent } : null)
+      setSaveStatus('saved')
+      setLastSaved(Date.now())
+      setIsEditingWiki(false)
+      
+      setTimeout(() => setSaveStatus('idle'), 2000)
+    } catch (err) {
+      console.error('Failed to save character biography:', err)
+      setSaveStatus('error')
+    }
+  }
+
+  const handleCancelWiki = () => {
+    if (wikiEditor && character) {
+      wikiEditor.commands.setContent(character.description || '')
+    }
+    setIsEditingWiki(false)
+    setSaveStatus('idle')
+  }
+
+  const handleSaveProfile = async () => {
+    if (!character) return
+    try {
+      await updateCharacter(character.id, {
+        name: profileName,
+        species: profileSpecies,
+        age: profileAge,
+        role: profileRole
+      })
+      setCharacter(prev => prev ? {
+        ...prev,
+        name: profileName,
+        species: profileSpecies,
+        age: profileAge,
+        role: profileRole
+      } : null)
+      setIsEditingProfile(false)
+    } catch (err) {
+      console.error('Failed to update profile details:', err)
+    }
+  }
+
+  const handleCancelProfile = () => {
+    if (character) {
+      setProfileName(character.name || '')
+      setProfileSpecies(character.species || '')
+      setProfileAge(character.age || '')
+      setProfileRole(character.role || '')
+    }
+    setIsEditingProfile(false)
+  }
 
   // Fetch central character details
   useEffect(() => {
@@ -138,12 +269,29 @@ export function CharacterDetailPage() {
           <span>Back to Verse Dashboard</span>
         </button>
 
-        <ExportButton 
-          scope={{ type: 'character', character, relationships }} 
-          title={`Export ${character.name}`} 
-          allowedFormats={['pdf', 'txt', 'md', 'html', 'png', 'json', 'yaml']} 
-        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => setIsSaveModalOpen(true)}
+            className="flex items-center justify-center gap-2 rounded-[var(--radius-md)] font-medium transition-colors focus:outline-none px-3.5 h-9 bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)]/50 text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] hover:border-[var(--color-border-strong)]/50 text-[13px] font-semibold cursor-pointer"
+          >
+            <History size={15} className="text-indigo-400" />
+            <span>Save Version</span>
+          </button>
+
+          <ExportButton 
+            scope={{ type: 'character', character, relationships }} 
+            title={`Export ${character.name}`} 
+            allowedFormats={['pdf', 'txt', 'md', 'html', 'png', 'json', 'yaml']} 
+          />
+        </div>
       </div>
+
+      {versionSaveSuccess && (
+        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-400 font-semibold rounded-xl text-center animate-fade-in">
+          Version snapshot successfully saved. It is now stored in Version History.
+        </div>
+      )}
 
       {/* 2. PROFILE HERO HEADER CARD */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-5 bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)]/40 rounded-2xl shadow-sm">
@@ -239,33 +387,205 @@ export function CharacterDetailPage() {
         {/* TAB VIEWS RENDERING */}
         <div className="min-h-[120px]">
           {activeTab === 'wiki' && (
-            <div className="p-5 bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)]/30 rounded-2xl leading-relaxed text-xs text-[var(--color-text-secondary)]">
-              {character.description ? (
-                <p className="whitespace-pre-wrap">{character.description}</p>
+            <div className="space-y-4">
+              {/* Write/Edit Toggle Mode Toolbar */}
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">
+                  Character Biography Record
+                </span>
+                
+                {!isEditingWiki ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingWiki(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[#818cf8] hover:text-[#a5b4fc] hover:bg-[var(--color-bg-hover)] transition-all text-xs font-semibold select-none cursor-pointer"
+                  >
+                    <Edit3 size={12} />
+                    <span>Edit Biography</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    {saveStatus === 'saving' && (
+                      <span className="flex items-center gap-1 text-xs text-indigo-400">
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        Saving...
+                      </span>
+                    )}
+                    {saveStatus === 'saved' && (
+                      <span className="flex items-center gap-1 text-xs text-emerald-400">
+                        <Check className="h-3.5 w-3.5" />
+                        Saved
+                      </span>
+                    )}
+                    {saveStatus === 'error' && (
+                      <span className="flex items-center gap-1 text-xs text-rose-400">
+                        <AlertCircle className="h-3.5 w-3.5" />
+                        Error
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSaveWiki}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition-all text-xs font-bold shrink-0 cursor-pointer"
+                    >
+                      <Save size={12} />
+                      <span>Save</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelWiki}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all text-xs font-semibold shrink-0 cursor-pointer"
+                    >
+                      <X size={12} />
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Read / Edit container views */}
+              {!isEditingWiki ? (
+                <div className="p-5 sm:p-6 bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] border-dashed border-opacity-65 rounded-2xl leading-relaxed text-[15px] text-[var(--color-text-secondary)] prose-editor">
+                  {character.description ? (
+                    <div 
+                      className="tiptap"
+                      dangerouslySetInnerHTML={{ __html: character.description }}
+                    />
+                  ) : (
+                    <span className="italic text-[var(--color-text-muted)]">No wiki record or lore biography compiled for this character yet.</span>
+                  )}
+                </div>
               ) : (
-                <span className="italic text-[var(--color-text-muted)]">No wiki record or lore biography compiled for this character yet.</span>
+                <div className="border border-[var(--color-border-subtle)]/30 rounded-2xl overflow-hidden flex flex-col bg-[var(--color-bg-elevated)]">
+                  {/* Formatting Toolbar */}
+                  <EditorToolbar editor={wikiEditor} />
+
+                  {/* Scrollable editable TipTap wrapper styled with prose-editor */}
+                  <div className="prose-editor p-4 sm:p-6 bg-[var(--color-bg-base)] border-t border-[var(--color-border-subtle)] hover:border-[var(--color-border-subtle)] border-opacity-40 outline-none">
+                    <EditorContent editor={wikiEditor} />
+                  </div>
+
+                  {/* Character and word stats footer */}
+                  <div className="flex h-8 items-center justify-between border-t border-[var(--color-border-subtle)]/20 bg-[var(--color-bg-elevated)] px-4 text-[10px] font-mono text-[var(--color-text-muted)]">
+                    <div>
+                      <span>Words: <strong>{wikiEditor ? writingService.countWords(wikiEditor.getHTML()) : 0}</strong></span>
+                    </div>
+                    <div>
+                      <span>Characters: {wikiEditor?.storage.characterCount.characters().toLocaleString() ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )}
 
           {activeTab === 'profile' && (
-            <div className="p-5 bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)]/30 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase">SPECIES</span>
-                <p className="text-xs font-semibold text-[var(--color-text-primary)]">{character.species || 'Unclassified'}</p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[12px] font-bold text-[var(--color-text-secondary)] uppercase tracking-wider">
+                  Profile Details Record
+                </span>
+                
+                {!isEditingProfile ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingProfile(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-indigo-400 hover:text-indigo-300 hover:bg-[var(--color-bg-hover)] transition-all text-xs font-semibold select-none cursor-pointer"
+                  >
+                    <Edit3 size={12} />
+                    <span>Edit Profile</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSaveProfile}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white transition-all text-xs font-bold shrink-0 cursor-pointer"
+                    >
+                      <Check size={12} />
+                      <span>Save</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelProfile}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-md bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-all text-xs font-semibold shrink-0 cursor-pointer"
+                    >
+                      <X size={12} />
+                      <span>Cancel</span>
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase">AGE</span>
-                <p className="text-xs font-semibold text-[var(--color-text-primary)]">{character.age || 'Unknown'}</p>
-              </div>
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase">ROLE / CLASSIFICATION</span>
-                <p className="text-xs font-semibold text-[var(--color-text-primary)]">{character.role || 'Unspecified Narrative Role'}</p>
-              </div>
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase">RECORD ID</span>
-                <p className="text-[10px] font-mono text-[var(--color-text-muted)] truncate">{character.id}</p>
-              </div>
+
+              {!isEditingProfile ? (
+                <div className="p-5 bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)]/30 rounded-2xl grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase">Name</span>
+                    <p className="text-xs font-semibold text-[var(--color-text-primary)]">{character.name}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase">SPECIES</span>
+                    <p className="text-xs font-semibold text-[var(--color-text-primary)]">{character.species || 'Unclassified'}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase">AGE</span>
+                    <p className="text-xs font-semibold text-[var(--color-text-primary)]">{character.age || 'Unknown'}</p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase">ROLE / CLASSIFICATION</span>
+                    <p className="text-xs font-semibold text-[var(--color-text-primary)]">{character.role || 'Unspecified Narrative Role'}</p>
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <span className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase">RECORD ID</span>
+                    <p className="text-[10px] font-mono text-[var(--color-text-muted)] truncate">{character.id}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-5 bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)]/30 rounded-2xl space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase block">Name</label>
+                      <input
+                        type="text"
+                        value={profileName}
+                        onChange={(e) => setProfileName(e.target.value)}
+                        className="w-full h-9 px-3 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg text-xs font-semibold text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500"
+                        placeholder="Character name"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase block">Species</label>
+                      <input
+                        type="text"
+                        value={profileSpecies}
+                        onChange={(e) => setProfileSpecies(e.target.value)}
+                        className="w-full h-9 px-3 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg text-xs font-semibold text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500"
+                        placeholder="Species (e.g. Elf, Human, Android)"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase block">Age</label>
+                      <input
+                        type="text"
+                        value={profileAge}
+                        onChange={(e) => setProfileAge(e.target.value)}
+                        className="w-full h-9 px-3 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg text-xs font-semibold text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500"
+                        placeholder="Age (e.g. 24, immortal)"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-mono tracking-wider text-[var(--color-text-muted)] uppercase block">Role / Classification</label>
+                      <input
+                        type="text"
+                        value={profileRole}
+                        onChange={(e) => setProfileRole(e.target.value)}
+                        className="w-full h-9 px-3 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg text-xs font-semibold text-[var(--color-text-primary)] focus:outline-none focus:border-indigo-500"
+                        placeholder="Narrative Role (e.g. Protagonist, Antagonist, Mentor)"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -393,6 +713,16 @@ export function CharacterDetailPage() {
           </div>
         )}
       </div>
+
+      <SnapshotCreateModal
+        isOpen={isSaveModalOpen}
+        onClose={() => setIsSaveModalOpen(false)}
+        character={character}
+        onSaved={() => {
+          setVersionSaveSuccess(true)
+          setTimeout(() => setVersionSaveSuccess(false), 5000)
+        }}
+      />
     </div>
   )
 }
