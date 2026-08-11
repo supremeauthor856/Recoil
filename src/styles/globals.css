@@ -74,6 +74,77 @@
 }
 
 @layer base {
+  /* Light Ceramic Slate Theme (matches reference UI design) */
+  [data-theme="light"] {
+    --color-bg-rail: #E4E8EE;
+    --color-bg-sidebar: #EBF0F6;
+    --color-bg-base: #E4E8EE;
+    --color-bg-elevated: #FFFFFF;
+    --color-bg-floating: #FFFFFF;
+    --color-bg-hover: #F1F5F9;
+    --color-bg-active: #E2E8F0;
+    --color-bg-subtle: rgba(15, 23, 42, 0.03);
+
+    --color-accent-primary: #0F172A;
+    --color-accent-primary-hover: #1E293B;
+    --color-accent-primary-dim: rgba(15, 23, 42, 0.08);
+    --color-accent-secondary: #3B82F6;
+    --color-accent-secondary-dim: rgba(59, 130, 246, 0.12);
+    --color-accent-highlight: #2563EB;
+
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #475569;
+    --color-text-muted: #64748B;
+    --color-text-disabled: #94A3B8;
+    --color-text-inverse: #FFFFFF;
+    --color-text-accent: #2563EB;
+    --color-text-link: #2563EB;
+
+    --color-border-subtle: rgba(15, 23, 42, 0.06);
+    --color-border-default: rgba(15, 23, 42, 0.12);
+    --color-border-strong: rgba(15, 23, 42, 0.22);
+    --color-border-accent: rgba(15, 23, 42, 0.30);
+
+    --color-success: #10B981;
+    --color-success-dim: rgba(16, 185, 129, 0.12);
+    --color-warning: #F59E0B;
+    --color-warning-dim: rgba(245, 158, 11, 0.12);
+    --color-error: #EF4444;
+    --color-error-dim: rgba(239, 68, 68, 0.12);
+    --color-info: #3B82F6;
+    --color-info-dim: rgba(59, 130, 246, 0.12);
+
+    --color-rel-romantic: #EC4899;
+    --color-rel-friendship: #3B82F6;
+    --color-rel-rivalry: #EF4444;
+    --color-rel-family: #F59E0B;
+    --color-rel-mentor: #10B981;
+    --color-rel-acquaintance: #64748B;
+    --color-rel-enemy: #DC2626;
+    --color-rel-neutral: #64748B;
+    --color-rel-complex: #8B5CF6;
+    --color-rel-loyalty: #F97316;
+    --color-rel-fear: #9333EA;
+    --color-rel-unspoken: #D946EF;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-2xl: 24px;
+    --radius-3xl: 28px;
+    --radius-full: 9999px;
+
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --rail-width: 68px;
+    --sidebar-width: 240px;
+    --header-height: 56px;
+    --status-bar-height: 48px;
+    --mobile-nav-height: 56px;
+  }
+
   [data-theme="dark"], :root {
     --color-bg-rail: #09090F;
     --color-bg-sidebar: #0F0F1A;

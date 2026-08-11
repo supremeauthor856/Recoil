@@ -14,7 +14,7 @@ interface ConversationViewProps {
   isStreaming: boolean
   streamingContent: string
   error: string | null
-  onSendMessage: (text: string) => void
+  onSendMessage: (text: string, option: 'general' | 'low-latency' | 'thinking') => void
   onSelectSegment: (id: string) => void
   onSummarizeTrigger: () => void
 }

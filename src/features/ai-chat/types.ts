@@ -88,9 +88,9 @@ export interface VerseContextPackage {
 }
 
 export const CONTEXT_WINDOW_SIZES: Record<string, number> = {
-  'gemini-2.5-pro-preview-06-05': 1000000,
-  'gemini-2.5-flash-preview-05-20': 1000000,
-  'gemini-2.5-flash-lite-preview-06-17': 1000000,
+  'gemini-3.1-pro-preview': 1000000,
+  'gemini-3.5-flash': 1000000,
+  'gemini-3.1-flash-lite': 1000000,
   'llama-3.3-70b-versatile': 128000,
   'llama-4-scout-17b-16e-instruct': 131072,
   'llama-4-maverick-17b-128e-instruct-fp8': 131072,

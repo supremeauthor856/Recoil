@@ -104,7 +104,7 @@ export const useSettingsStore = create<SettingsStore>()(
         verseBible: { ...defaultTaskOverride },
         generalSuggestions: { ...defaultTaskOverride },
       },
-      theme: 'dark',
+      theme: 'light',
       fontSize: 'default',
       reducedMotion: false,
 

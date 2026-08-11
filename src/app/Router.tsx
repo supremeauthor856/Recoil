@@ -15,6 +15,7 @@ import { LoreListPage, LoreEntryPage } from '../features/lore'
 import AIWorkspacePage from '../features/ai-chat'
 import { ImportPage } from '../features/import'
 import { LoreExpanderPage } from '../features/tools/components/LoreExpanderPage'
+import { VerseMapPage } from '../features/verse/components/VerseMapPage'
 import { ForeshadowingPlannerPage } from '../features/tools/components/ForeshadowingPlannerPage'
 import { ArcStatusBoardPage } from '../features/tools/components/ArcStatusBoardPage'
 import { HeadcanonVaultPage } from '../features/tools/components/HeadcanonVaultPage'
@@ -87,7 +88,7 @@ const router = createBrowserRouter([
       { path: 'verse/:verseId/writing/:pieceId', element: <WritingDetailPage /> },
       { path: 'verse/:verseId/relationships', element: <RelationshipWebPage /> },
       { path: 'verse/:verseId/stats', element: <StatsDashboardPage /> },
-      { path: 'verse/:verseId/verse-map', element: <PlaceholderPage title="Verse Map" description="Feature coming soon." /> },
+      { path: 'verse/:verseId/verse-map', element: <VerseMapPage /> },
       { path: 'verse/:verseId/ai', element: <AIWorkspacePage /> },
       { path: 'verse/:verseId/import', element: <ImportPage /> },
       { path: 'verse/:verseId/tools/lore-expander', element: <LoreExpanderPage /> },

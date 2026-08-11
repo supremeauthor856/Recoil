@@ -22,7 +22,7 @@ const TASK_MAP: Record<string, string> = {
 }
 
 const PROVIDER_PLACEHOLDER_MODELS: Record<string, string> = {
-  gemini: 'gemini-2.5-flash-preview-05-20',
+  gemini: 'gemini-3.5-flash',
   groq: 'llama-3.3-70b-versatile',
   cloudflareAI: '@cf/meta/llama-3.3-70b-instruct',
   openRouter: 'meta-llama/llama-3.3-70b-instruct:free',

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { streamAI, estimateTokens } from '../../../services/aiService'
+import { streamAI, estimateTokens, ThinkingLevel } from '../../../services/aiService'
 import { conversationService } from '../../../services/conversationService'
 import type { Conversation, ConversationMessage, AIWorkspaceMode, VerseContextPackage } from '../types'
 
@@ -56,7 +56,7 @@ export function useAIChat({
     return basePrompt
   }
 
-  const sendMessage = async (userContent: string) => {
+  const sendMessage = async (userContent: string, intelligenceOption: 'general' | 'low-latency' | 'thinking' = 'general') => {
     if (!conversationId) {
       setError('No active conversation selected.')
       return
@@ -99,6 +99,9 @@ export function useAIChat({
           systemPrompt,
           messages: aiMessages,
           injectGuidelines: true,
+          thinkingLevel: intelligenceOption === 'thinking' ? ThinkingLevel.HIGH : undefined,
+          isLowLatency: intelligenceOption === 'low-latency' ? true : undefined,
+          preferredModel: intelligenceOption === 'general' ? 'gemini-3.5-flash' : undefined,
         },
         (chunk: string) => {
           assistantResponseBuffer += chunk

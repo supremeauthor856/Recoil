@@ -31,9 +31,9 @@ export function SidebarItem({
   }
 
   const commonClass = cn(
-    'flex items-center justify-between gap-2.5 group h-[30px] pr-3.5 py-1.5 text-[12px] font-medium transition-all duration-150 select-none rounded-[var(--radius-md)] mx-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]',
+    'flex items-center justify-between gap-2.5 group h-[34px] pr-3.5 py-1.5 text-[12px] font-medium transition-all duration-150 select-none rounded-2xl mx-1 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800',
     getIndentStyle(),
-    active && 'bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-highlight)] hover:bg-[var(--color-accent-primary)]/15 font-semibold'
+    active && 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold rounded-full shadow-xs'
   )
 
   const innerContent = (
@@ -69,10 +69,10 @@ export function SidebarItem({
         onClick={handleClick}
         className={({ isActive }) =>
           cn(
-            'flex items-center justify-between gap-2.5 group h-[30px] pr-3.5 py-1.5 text-[12px] font-medium transition-all duration-150 select-none rounded-[var(--radius-md)] mx-1 text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]',
+            'flex items-center justify-between gap-2.5 group h-[34px] pr-3.5 py-1.5 text-[12px] font-medium transition-all duration-150 select-none rounded-2xl mx-1 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800',
             getIndentStyle(),
             (isActive || active) &&
-              'bg-[var(--color-accent-primary)]/10 text-[var(--color-accent-highlight)] hover:bg-[var(--color-accent-primary)]/15 font-semibold'
+              'bg-slate-900 text-white dark:bg-white dark:text-slate-900 font-bold rounded-full shadow-xs'
           )
         }
       >

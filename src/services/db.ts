@@ -13,6 +13,13 @@ export class RecoilDatabase extends Dexie {
   writing_pieces!: Table<WritingPiece, string>
   chapters!: Table<Chapter, string>
   writing_guidelines!: Table<WritingGuideline, string>
+  lore_entries!: Table<any, string>
+  story_arcs!: Table<any, string>
+  foreshadowing!: Table<any, string>
+  headcanons!: Table<any, string>
+  ai_conversations!: Table<any, string>
+  ai_messages!: Table<any, string>
+  version_history!: Table<any, string>
 
   constructor() {
     super('RecoilDatabase')
@@ -24,6 +31,15 @@ export class RecoilDatabase extends Dexie {
       writing_pieces: 'id, verse_id, sub_series_id, updated_at',
       chapters: 'id, writing_piece_id, updated_at',
       writing_guidelines: 'id, category, is_active, updated_at'
+    })
+    this.version(2).stores({
+      lore_entries: 'id, verse_id, updated_at',
+      story_arcs: 'id, verse_id, updated_at',
+      foreshadowing: 'id, verse_id, updated_at',
+      headcanons: 'id, verse_id, character_id, updated_at',
+      ai_conversations: 'id, verse_id, updated_at',
+      ai_messages: 'id, conversation_id, updated_at',
+      version_history: 'id, entity_id, entity_type, updated_at'
     })
   }
 }

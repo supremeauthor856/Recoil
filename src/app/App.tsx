@@ -10,8 +10,6 @@ export default function App() {
   const setIsOnline = useUIStore(state => state.setIsOnline)
 
   useEffect(() => {
-    // Add dark mode by default
-    document.documentElement.classList.add('dark')
     document.body.style.backgroundColor = 'var(--color-bg-base)'
     
     const handleOnline = () => setIsOnline(true)
@@ -30,6 +28,13 @@ export default function App() {
     const applyTheme = (theme: string, fontSize: string, reducedMotion: boolean) => {
       document.documentElement.setAttribute('data-theme', theme)
       document.documentElement.setAttribute('data-font', fontSize)
+      if (theme === 'light') {
+        document.documentElement.classList.remove('dark')
+        document.documentElement.classList.add('light')
+      } else {
+        document.documentElement.classList.remove('light')
+        document.documentElement.classList.add('dark')
+      }
       if (reducedMotion) {
         document.documentElement.classList.add('reduce-motion')
       } else {

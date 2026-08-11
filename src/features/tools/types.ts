@@ -64,7 +64,7 @@ export const ARC_STATUS_COLORS: Record<ArcStatus, string> = {
   complete: 'var(--color-success)',
 }
 
-export type CanonStatus = 'confirmed-canon' | 'soft-headcanon' | 'denied' | 'undecided'
+export type CanonStatus = 'official-canon' | 'headcanon' | 'non-canon' | 'fanon-alternate' | 'just-an-idea' | 'confirmed-canon' | 'soft-headcanon' | 'denied' | 'undecided'
 
 export interface Headcanon {
   id: string
@@ -73,6 +73,7 @@ export interface Headcanon {
   content: string
   canon_status: CanonStatus
   notes: string | null
+  tags?: string[]
   created_at: number
   updated_at: number
   // Client-only — enriched after fetch
@@ -80,21 +81,31 @@ export interface Headcanon {
 }
 
 export const CANON_STATUSES: CanonStatus[] = [
-  'confirmed-canon', 'soft-headcanon', 'denied', 'undecided'
+  'official-canon', 'headcanon', 'non-canon', 'fanon-alternate', 'just-an-idea'
 ]
 
 export const CANON_STATUS_LABELS: Record<CanonStatus, string> = {
-  'confirmed-canon': 'Confirmed Canon',
-  'soft-headcanon': 'Soft Headcanon',
-  denied: 'Denied',
-  undecided: 'Undecided',
+  'official-canon': 'Official Canon',
+  'headcanon': 'Headcanon',
+  'non-canon': 'Non-Canon / AU',
+  'fanon-alternate': 'Fanon / Alternate',
+  'just-an-idea': 'Just an Idea',
+  'confirmed-canon': 'Official Canon',
+  'soft-headcanon': 'Headcanon',
+  denied: 'Non-Canon',
+  undecided: 'Just an Idea',
 }
 
 export const CANON_STATUS_COLORS: Record<CanonStatus, string> = {
-  'confirmed-canon': 'var(--color-success)',
-  'soft-headcanon': 'var(--color-accent-secondary)',
-  denied: 'var(--color-error)',
-  undecided: 'var(--color-warning)',
+  'official-canon': '#10B981', // Emerald green
+  'headcanon': '#3B82F6', // Blue
+  'non-canon': '#EF4444', // Red
+  'fanon-alternate': '#8B5CF6', // Purple
+  'just-an-idea': '#F59E0B', // Amber
+  'confirmed-canon': '#10B981',
+  'soft-headcanon': '#3B82F6',
+  denied: '#EF4444',
+  undecided: '#F59E0B',
 }
 
 export interface PlotHoleIssue {

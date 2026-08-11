@@ -5,6 +5,15 @@ export interface Verse {
   icon_color: string
   icon_letter: string | null
   icon_image_url: string | null
+  genre?: string
+  canon_strictness?: string
+  magic_system?: string
+  narrative_tone?: string
+  target_audience?: string
+  era_tech_level?: string
+  seed_starter_worldbuilding?: boolean
+  primary_faction_name?: string
+  visibility_privacy?: string
   created_at: number
   updated_at: number
   sort_order: number
@@ -43,6 +52,15 @@ export type CreateVerseInput = {
   description?: string
   icon_color?: string
   icon_letter?: string
+  genre?: string
+  canon_strictness?: string
+  magic_system?: string
+  narrative_tone?: string
+  target_audience?: string
+  era_tech_level?: string
+  seed_starter_worldbuilding?: boolean
+  primary_faction_name?: string
+  visibility_privacy?: string
 }
 
 export type CreateSubSeriesInput = {

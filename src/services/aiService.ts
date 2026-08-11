@@ -13,9 +13,9 @@ export const BUILT_IN_PROVIDERS: BuiltInProviderDefinition[] = [
     keyPlaceholder: 'AIza...',
     requiresAccountId: false,
     models: [
-      { id: 'gemini-2.5-pro-preview-06-05', label: 'Gemini 2.5 Pro', contextWindow: 1000000 },
-      { id: 'gemini-2.5-flash-preview-05-20', label: 'Gemini 2.5 Flash', contextWindow: 1000000 },
-      { id: 'gemini-2.5-flash-lite-preview-06-17', label: 'Gemini 2.5 Flash Lite', contextWindow: 1000000 },
+      { id: 'gemini-3.1-pro-preview', label: 'Gemini 3.1 Pro', contextWindow: 1000000 },
+      { id: 'gemini-3.5-flash', label: 'Gemini 3.5 Flash', contextWindow: 1000000 },
+      { id: 'gemini-3.1-flash-lite', label: 'Gemini 3.1 Flash Lite', contextWindow: 1000000 },
     ],
   },
   {
@@ -192,7 +192,7 @@ const TASK_GUIDELINE_CATEGORIES: Record<string, GuidelineCategory[]> = {
 }
 
 const DEFAULT_MODELS: Record<string, string> = {
-  gemini: 'gemini-2.5-flash-preview-05-20',
+  gemini: 'gemini-3.5-flash',
   groq: 'llama-3.3-70b-versatile',
   cloudflareAI: '@cf/meta/llama-3.3-70b-instruct',
   openRouter: 'meta-llama/llama-3.3-70b-instruct:free',
@@ -202,6 +202,13 @@ const DEFAULT_MODELS: Record<string, string> = {
   cohere: 'command-r',
   githubModels: 'Meta-Llama-3.3-70B-Instruct',
   huggingface: 'meta-llama/Meta-Llama-3.1-70B-Instruct',
+}
+
+export enum ThinkingLevel {
+  OFF = 'OFF',
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH',
 }
 
 export interface AIMessage {
@@ -216,6 +223,9 @@ export interface AIRequestOptions {
   maxTokens?: number
   temperature?: number
   injectGuidelines?: boolean  // default true
+  thinkingLevel?: ThinkingLevel
+  isLowLatency?: boolean
+  preferredModel?: string
 }
 
 export interface AIResponse {
@@ -240,6 +250,70 @@ interface ResolvedProvider {
   temperature: number
 }
 
+function sanitizeModel(model: string): string {
+  if (!model) return model
+  const m = model.toLowerCase()
+  if (m.includes('gemini-2.5-flash-lite') || m.includes('gemini-2.0-flash-lite') || m.includes('gemini-1.5-flash-lite')) {
+    return 'gemini-3.1-flash-lite'
+  }
+  if (m.includes('gemini-2.5-flash') || m.includes('gemini-2.0-flash') || m.includes('gemini-1.5-flash') || m === 'gemini-flash' || m === 'gemini-pro') {
+    return 'gemini-3.5-flash'
+  }
+  if (m.includes('gemini-2.5-pro') || m.includes('gemini-2.0-pro') || m.includes('gemini-1.5-pro') || m.includes('gemini-2.0-flash-thinking')) {
+    return 'gemini-3.1-pro-preview'
+  }
+  return model
+}
+
+function pruneForLimits(providerId: string, systemPrompt: string, messages: AIMessage[]): { systemPrompt: string, messages: AIMessage[] } {
+  if (providerId !== 'groq') {
+    return { systemPrompt, messages }
+  }
+
+  let currentPrompt = systemPrompt
+  const currentMessages = [...messages]
+
+  const getLength = () => [currentPrompt, ...currentMessages.map(m => m.content)].join(' ').length
+
+  // Groq TPM/RPM are extremely low on free tier. Let's prune context to stay under 32,000 characters (~8,000 tokens) total.
+  // 1. If still too long, drop oldest messages (except the very last user message)
+  while (getLength() > 32000 && currentMessages.length > 1) {
+    currentMessages.shift()
+  }
+
+  // 2. If still too long, let's aggressively shorten/trim the systemPrompt (remove detailed profiles, etc.)
+  if (getLength() > 32000) {
+    const profilesIndex = currentPrompt.indexOf('=== CHARACTERS DETAILED PROFILES ===')
+    if (profilesIndex !== -1) {
+      currentPrompt = currentPrompt.substring(0, profilesIndex) + '\n[Detailed profiles omitted to fit model limits]'
+    }
+  }
+
+  if (getLength() > 32000) {
+    const guidelinesIndex = currentPrompt.indexOf('--- WRITING GUIDELINES ---')
+    if (guidelinesIndex !== -1) {
+      currentPrompt = currentPrompt.substring(0, guidelinesIndex) + '\n[Guidelines omitted to fit model limits]'
+    }
+  }
+
+  return { systemPrompt: currentPrompt, messages: currentMessages }
+}
+
+function getOptimalGeminiModel(taskType: string, model: string): string {
+  const m = model.toLowerCase()
+  if (m.includes('gemini-3.1-pro-preview') || m.includes('gemini-3.5-flash') || m.includes('gemini-3.1-flash-lite')) {
+    return model
+  }
+  
+  if (['plotHoleDetector', 'novelWriting', 'importAutoFill', 'foreshadowingPlanner', 'characterAnalysis'].includes(taskType)) {
+    return 'gemini-3.1-pro-preview'
+  }
+  if (['chapterSummary', 'dialogueVoiceTrainer', 'generalSuggestions'].includes(taskType)) {
+    return 'gemini-3.1-flash-lite'
+  }
+  return 'gemini-3.5-flash'
+}
+
 function resolveProvider(taskType: string): ResolvedProvider | null {
   const settings = useSettingsStore.getState()
   const taskOverride = (settings.taskOverrides as Record<string, TaskModelOverride>)[taskType]
@@ -249,17 +323,21 @@ function resolveProvider(taskType: string): ResolvedProvider | null {
     const pId = taskOverride.provider
     const pConfig = (settings.providers as unknown as Record<string, APIProviderConfig>)[pId]
     if (pConfig?.enabled && pConfig?.apiKey) {
-      const def = BUILT_IN_PROVIDERS.find(p => p.id === pId)
-      if (def) {
-        return {
-          id: pId, name: def.name, format: def.format,
-          baseUrl: pConfig.baseUrl ?? def.baseUrl,
-          apiKey: pConfig.apiKey,
-          accountId: (pConfig as Record<string, any>).accountId,
-          model: taskOverride.model,
-          temperature: taskOverride.temperature ?? 0.8,
-        }
-      }
+       const def = BUILT_IN_PROVIDERS.find(p => p.id === pId)
+       if (def) {
+         let resolvedModel = sanitizeModel(taskOverride.model)
+         if (def.format === 'gemini') {
+           resolvedModel = getOptimalGeminiModel(taskType, resolvedModel)
+         }
+         return {
+           id: pId, name: def.name, format: def.format,
+           baseUrl: pConfig.baseUrl ?? def.baseUrl,
+           apiKey: pConfig.apiKey,
+           accountId: (pConfig as Record<string, any>).accountId,
+           model: resolvedModel,
+           temperature: taskOverride.temperature ?? 0.8,
+         }
+       }
     }
     // Check custom providers
     const customProvider = settings.providers.custom?.find(
@@ -270,7 +348,7 @@ function resolveProvider(taskType: string): ResolvedProvider | null {
         id: pId, name: customProvider.name ?? 'Custom', format: 'openai',
         baseUrl: customProvider.baseUrl ?? '',
         apiKey: customProvider.apiKey,
-        model: taskOverride.model,
+        model: sanitizeModel(taskOverride.model),
         temperature: taskOverride.temperature ?? 0.8,
       }
     }
@@ -283,12 +361,16 @@ function resolveProvider(taskType: string): ResolvedProvider | null {
     if (pConfig?.enabled && pConfig?.apiKey) {
       const def = BUILT_IN_PROVIDERS.find(p => p.id === pId)
       if (def) {
+        let resolvedModel = sanitizeModel(pConfig.defaultModel ?? DEFAULT_MODELS[pId] ?? def.models[0]?.id ?? '')
+        if (def.format === 'gemini') {
+          resolvedModel = getOptimalGeminiModel(taskType, resolvedModel)
+        }
         return {
           id: pId, name: def.name, format: def.format,
           baseUrl: pConfig.baseUrl ?? def.baseUrl,
           apiKey: pConfig.apiKey,
           accountId: (pConfig as Record<string, any>).accountId,
-          model: pConfig.defaultModel ?? DEFAULT_MODELS[pId] ?? def.models[0]?.id ?? '',
+          model: resolvedModel,
           temperature: 0.8,
         }
       }
@@ -303,7 +385,7 @@ function resolveProvider(taskType: string): ResolvedProvider | null {
         id: (cp as any).id, name: (cp as any).name, format: 'openai',
         baseUrl: (cp as any).baseUrl ?? '',
         apiKey: (cp as any).apiKey,
-        model: (cp as any).defaultModel ?? '',
+        model: sanitizeModel((cp as any).defaultModel ?? ''),
         temperature: 0.8,
       }
     }
@@ -342,6 +424,14 @@ export async function requestAI(options: AIRequestOptions): Promise<AIResponse> 
     }
   }
 
+  if (options.thinkingLevel === ThinkingLevel.HIGH) {
+    provider.model = 'gemini-3.1-pro-preview'
+  } else if (options.isLowLatency) {
+    provider.model = 'gemini-3.1-flash-lite'
+  } else if (options.preferredModel) {
+    provider.model = options.preferredModel
+  }
+
   const settings = useSettingsStore.getState()
   const taskOverride = (settings.taskOverrides as Record<string, TaskModelOverride>)[options.taskType]
   const temperature = provider.temperature
@@ -358,9 +448,13 @@ export async function requestAI(options: AIRequestOptions): Promise<AIResponse> 
     systemPrompt = `${taskOverride.systemPromptPrefix}\n\n${systemPrompt}`
   }
 
+  const pruned = pruneForLimits(provider.id, systemPrompt, options.messages)
+  const finalSystemPrompt = pruned.systemPrompt
+  const finalMessages = pruned.messages
+
   // Estimate token count (rough: 4 chars ≈ 1 token)
   const estimatedTokens = Math.ceil(
-    [systemPrompt, ...options.messages.map(m => m.content)]
+    [finalSystemPrompt, ...finalMessages.map(m => m.content)]
       .join(' ')
       .length / 4
   )
@@ -370,11 +464,11 @@ export async function requestAI(options: AIRequestOptions): Promise<AIResponse> 
   try {
     switch (provider.format) {
       case 'gemini':
-        return await callGemini(provider, systemPrompt, options.messages, maxTokens, temperature, estimatedTokens)
+        return await callGemini(provider, finalSystemPrompt, finalMessages, maxTokens, temperature, estimatedTokens, options)
       case 'cloudflare':
-        return await callCloudflareAI(provider, systemPrompt, options.messages, maxTokens, temperature, estimatedTokens)
+        return await callCloudflareAI(provider, finalSystemPrompt, finalMessages, maxTokens, temperature, estimatedTokens)
       default:
-        return await callOpenAICompatible(provider, systemPrompt, options.messages, maxTokens, temperature, estimatedTokens)
+        return await callOpenAICompatible(provider, finalSystemPrompt, finalMessages, maxTokens, temperature, estimatedTokens)
     }
   } catch (error) {
     // API keys must never be logged to console or in error messages
@@ -439,20 +533,33 @@ async function callGemini(
   messages: AIMessage[],
   maxTokens: number,
   temperature: number,
-  estimatedTokens: number
+  estimatedTokens: number,
+  options?: AIRequestOptions
 ): Promise<AIResponse> {
   const url = `${provider.baseUrl}/v1beta/models/${provider.model}:generateContent?key=${provider.apiKey}`
   const contents = messages.map(m => ({
     role: m.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: m.content }],
   }))
+
+  const isHighThinking = options?.thinkingLevel === ThinkingLevel.HIGH || provider.model === 'gemini-3.1-pro-preview'
+
   const body: Record<string, any> = {
     contents,
     generationConfig: {
-      maxOutputTokens: maxTokens,
       temperature,
     },
   }
+
+  if (isHighThinking) {
+    body.generationConfig.thinkingLevel = 'HIGH'
+    body.generationConfig.thinkingConfig = {
+      thinkingBudget: 2048,
+    }
+  } else {
+    body.generationConfig.maxOutputTokens = maxTokens
+  }
+
   if (systemPrompt) {
     body.systemInstruction = { parts: [{ text: systemPrompt }] }
   }
@@ -551,6 +658,14 @@ export async function streamAI(
       throw new Error('No AI provider configured. Please add API keys in Settings > AI Configuration.')
     }
 
+    if (options.thinkingLevel === ThinkingLevel.HIGH) {
+      provider.model = 'gemini-3.1-pro-preview'
+    } else if (options.isLowLatency) {
+      provider.model = 'gemini-3.1-flash-lite'
+    } else if (options.preferredModel) {
+      provider.model = options.preferredModel
+    }
+
     const settings = useSettingsStore.getState()
     const taskOverride = (settings.taskOverrides as Record<string, TaskModelOverride>)[options.taskType]
     const temperature = provider.temperature
@@ -566,8 +681,12 @@ export async function streamAI(
       systemPrompt = `${taskOverride.systemPromptPrefix}\n\n${systemPrompt}`
     }
 
+    const pruned = pruneForLimits(provider.id, systemPrompt, options.messages)
+    const finalSystemPrompt = pruned.systemPrompt
+    const finalMessages = pruned.messages
+
     const estimatedTokens = Math.ceil(
-      [systemPrompt, ...options.messages.map(m => m.content)]
+      [finalSystemPrompt, ...finalMessages.map(m => m.content)]
         .join(' ')
         .length / 4
     )
@@ -577,19 +696,27 @@ export async function streamAI(
     try {
       if (provider.format === 'gemini') {
         const url = `${provider.baseUrl}/v1beta/models/${provider.model}:streamGenerateContent?key=${provider.apiKey}&alt=sse`
-        const contents = options.messages.map(m => ({
+        const contents = finalMessages.map(m => ({
           role: m.role === 'assistant' ? 'model' : 'user',
           parts: [{ text: m.content }],
         }))
+        const isHighThinking = options?.thinkingLevel === ThinkingLevel.HIGH || provider.model === 'gemini-3.1-pro-preview'
         const body: Record<string, any> = {
           contents,
           generationConfig: {
-            maxOutputTokens: maxTokens,
             temperature,
           },
         }
-        if (systemPrompt) {
-          body.systemInstruction = { parts: [{ text: systemPrompt }] }
+        if (isHighThinking) {
+          body.generationConfig.thinkingLevel = 'HIGH'
+          body.generationConfig.thinkingConfig = {
+            thinkingBudget: 2048,
+          }
+        } else {
+          body.generationConfig.maxOutputTokens = maxTokens
+        }
+        if (finalSystemPrompt) {
+          body.systemInstruction = { parts: [{ text: finalSystemPrompt }] }
         }
 
         const response = await fetch(url, {
@@ -618,8 +745,8 @@ export async function streamAI(
         }
         const url = `${provider.baseUrl}/accounts/${provider.accountId}/ai/run/${provider.model}`
         const cfMessages = [
-          { role: 'system', content: systemPrompt },
-          ...options.messages.map(m => ({ role: m.role, content: m.content })),
+          { role: 'system', content: finalSystemPrompt },
+          ...finalMessages.map(m => ({ role: m.role, content: m.content })),
         ]
 
         const response = await fetch(url, {
@@ -654,8 +781,8 @@ export async function streamAI(
       } else {
         // OpenAI Compatible format
         const allMessages = [
-          { role: 'system', content: systemPrompt },
-          ...options.messages,
+          { role: 'system', content: finalSystemPrompt },
+          ...finalMessages,
         ]
         const response = await fetch(`${provider.baseUrl}/v1/chat/completions`, {
           method: 'POST',

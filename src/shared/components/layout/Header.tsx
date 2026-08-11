@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
-import { Search, User, BookOpen, X, ChevronRight, Menu, HelpCircle, CornerDownRight } from 'lucide-react'
+import { useNavigate, useParams, useLocation, NavLink } from 'react-router-dom'
+import { Search, User, BookOpen, X, ChevronRight, Menu, HelpCircle, CornerDownRight, Bell, Mail, Layers, Sparkles } from 'lucide-react'
 import { db } from '../../../services/db'
 import { useUIStore } from '../../../store/uiStore'
 import { useNavigationStore } from '../../../store/navigationStore'
@@ -242,185 +242,167 @@ export function Header() {
     )
   }
 
+  const targetVId = verseId || activeVerseId
+
+  // Pill Nav Config
+  const navTabs = [
+    { label: 'Relationships', path: targetVId ? `/verse/${targetVId}/relationships` : '/' },
+    { label: 'Characters', path: targetVId ? `/verse/${targetVId}/characters` : '/' },
+    { label: 'Lore', path: targetVId ? `/verse/${targetVId}/lore` : '/' },
+    { label: 'Journeys', path: targetVId ? `/verse/${targetVId}` : '/' },
+    { label: 'Manuscripts', path: targetVId ? `/verse/${targetVId}/writing` : '/' },
+    { label: 'Reports', path: targetVId ? `/verse/${targetVId}/stats` : '/' },
+    { label: 'AI Companion', path: targetVId ? `/verse/${targetVId}/ai` : '/' },
+    { label: 'Tools', path: targetVId ? `/verse/${targetVId}/tools/lore-expander` : '/settings' },
+  ]
+
   return (
-    <header className="h-[56px] border-b border-[var(--color-border-subtle)]/60 bg-[var(--color-bg-elevated)] flex justify-between items-center px-4 md:px-6 shrink-0 relative z-40 select-none">
+    <header className="h-[64px] border-b border-slate-200/60 dark:border-slate-800 bg-[var(--color-bg-base)] flex justify-between items-center px-4 md:px-8 shrink-0 relative z-40 select-none">
       
-      {/* Left section: Hamburger (mobile) + Breadcrumbs */}
-      <div className="flex items-center gap-2.5 min-w-0">
+      {/* 1. Brand Logo Mark */}
+      <div className="flex items-center gap-3 shrink-0">
         <button
           onClick={() => setLeftSidebarOpen(!leftSidebarOpen)}
-          className="md:hidden p-1.5 rounded bg-[var(--color-bg-base)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors mr-1 cursor-pointer focus:outline-none"
-          title="Toggle Navigation Menu"
+          className="md:hidden p-2 rounded-xl bg-white/80 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 shadow-xs cursor-pointer"
         >
           <Menu size={18} />
         </button>
-        <div className="flex items-center gap-1.5 min-w-0">
-          {renderBreadcrumbs()}
-        </div>
+
+        <NavLink to="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 flex items-center justify-center font-bold text-sm shadow-sm group-hover:scale-105 transition-transform">
+            <Layers size={18} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-base font-extrabold text-slate-900 dark:text-slate-100 tracking-tight font-mono leading-none">
+              recoil<span className="text-blue-600 dark:text-blue-400">crm</span>
+            </span>
+            <span className="text-[10px] text-slate-500 font-medium tracking-wide">
+              {currentVerseName || 'Universe Studio'}
+            </span>
+          </div>
+        </NavLink>
       </div>
 
-      {/* Middle/Right section: Persistent Search Bar */}
-      <div ref={containerRef} className="relative w-full max-w-[340px] md:max-w-[400px] mx-3">
-        <div className="relative flex items-center">
-          <Search size={15} className="absolute left-3 text-[var(--color-text-muted)] pointer-events-none" />
-          <input
-            ref={inputRef}
-            type="text"
-            className="w-full h-9 pl-9 pr-16 bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] rounded-lg text-[13px] text-[var(--color-text-primary)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent-primary)] focus:ring-1 focus:ring-[var(--color-accent-primary)]/20 transition-all shadow-sm"
-            placeholder="Quick search characters or lore..."
-            value={searchVal}
-            onChange={(e) => {
-              setSearchVal(e.target.value)
-              setDropdownOpen(true)
-            }}
-            onFocus={() => setDropdownOpen(true)}
-          />
-          {searchVal ? (
-            <button
-              onClick={() => {
-                setSearchVal('')
-                inputRef.current?.focus()
+      {/* 2. Center Top Navigation Capsule Pills */}
+      <nav className="hidden lg:flex items-center gap-1.5 bg-slate-200/50 dark:bg-slate-800/50 p-1.5 rounded-full border border-slate-200/60 dark:border-slate-700/60 backdrop-blur-md">
+        {navTabs.map((tab) => {
+          const isActive = location.pathname === tab.path || (tab.label === 'Journeys' && (location.pathname === '/' || location.pathname.startsWith('/verse/')))
+          
+          return (
+            <NavLink
+              key={tab.label}
+              to={tab.path}
+              className={({ isActive: linkActive }) => {
+                const active = linkActive || (tab.label === 'Journeys' && (location.pathname === '/' || (location.pathname.startsWith('/verse/') && !location.pathname.includes('/characters') && !location.pathname.includes('/lore') && !location.pathname.includes('/writing') && !location.pathname.includes('/relationships') && !location.pathname.includes('/stats') && !location.pathname.includes('/ai') && !location.pathname.includes('/tools'))))
+                return `px-4 py-1.5 rounded-full text-xs md:text-[13px] font-semibold transition-all duration-200 cursor-pointer ${
+                  active
+                    ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-md scale-[1.02]'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-300/40 dark:hover:bg-slate-700/50'
+                }`
               }}
-              className="absolute right-9 p-1 rounded hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors focus:outline-none"
             >
-              <X size={13} />
-            </button>
-          ) : (
-            <div className="absolute right-9 hidden sm:flex items-center gap-0.5 opacity-40 hover:opacity-60 transition-opacity">
-              <kbd className="text-[10px] font-mono px-1 rounded bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] leading-none select-none p-[2px]">/</kbd>
+              {tab.label}
+            </NavLink>
+          )
+        })}
+      </nav>
+
+      {/* 3. Right Action Bar Controls */}
+      <div className="flex items-center gap-2 shrink-0">
+        {/* Quick Search Palette Circle */}
+        <div ref={containerRef} className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="w-10 h-10 rounded-full bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 shadow-xs flex items-center justify-center cursor-pointer transition-all hover:scale-105"
+            title="Quick Search (Click or /)"
+          >
+            <Search size={18} />
+          </button>
+
+          {/* Quick Search Modal/Dropdown */}
+          {dropdownOpen && (
+            <div className="absolute top-12 right-0 w-[320px] md:w-[380px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl rounded-2xl z-50 p-3 animate-slide-up">
+              <div className="relative flex items-center mb-2">
+                <Search size={15} className="absolute left-3 text-slate-400 pointer-events-none" />
+                <input
+                  ref={inputRef}
+                  type="text"
+                  className="w-full h-9 pl-9 pr-8 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Search characters or lore..."
+                  value={searchVal}
+                  onChange={(e) => setSearchVal(e.target.value)}
+                  autoFocus
+                />
+                {searchVal && (
+                  <button onClick={() => setSearchVal('')} className="absolute right-2 text-slate-400 hover:text-slate-600">
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Search Results */}
+              <div className="max-h-[260px] overflow-y-auto space-y-1 scrollbar-custom">
+                {results.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => handleSelectItem(item.url)}
+                    className="w-full text-left p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-2.5 transition-colors"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                      {item.type === 'character' ? <User size={14} /> : <BookOpen size={14} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">{item.title}</p>
+                      <p className="text-[10px] text-slate-500 truncate">{item.subtitle}</p>
+                    </div>
+                  </button>
+                ))}
+                {searchVal && results.length === 0 && (
+                  <p className="text-center text-xs text-slate-400 py-4">No results found for "{searchVal}"</p>
+                )}
+              </div>
+
+              <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px] text-slate-400">
+                <span>Press Cmd+K for command palette</span>
+                <button onClick={openSearchPalette} className="text-blue-600 font-semibold hover:underline">
+                  Open ⌘K
+                </button>
+              </div>
             </div>
           )}
-          
-          <button
-            onClick={openSearchPalette}
-            className="absolute right-3 p-1 rounded hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors max-md:hidden focus:outline-none"
-            title="Open command palette (⌘K)"
-          >
-            <HelpCircle size={14} />
-          </button>
         </div>
 
-        {/* Floating results Dropdown container */}
-        {dropdownOpen && searchVal.trim().length > 0 && (
-          <div className="absolute top-[calc(100%+6px)] right-0 left-0 w-full bg-[var(--color-bg-elevated)] border border-[var(--color-border-subtle)] shadow-2xl rounded-xl z-50 flex flex-col overflow-hidden max-h-[420px] scrollbar-custom animate-slide-up">
-            
-            <div className="flex items-center justify-between px-3.5 py-2.5 bg-[var(--color-bg-base)]/60 border-b border-[var(--color-border-subtle)]/40 text-[11px] font-medium text-[var(--color-text-secondary)] uppercase tracking-wider">
-              <span>Quick Search Results</span>
-              {isSearching ? (
-                <span className="text-[10px] lowercase italic animate-pulse">Searching...</span>
-              ) : (
-                <span className="text-[10px] capitalize font-normal text-[var(--color-text-muted)]">
-                  {results.length} found
-                </span>
-              )}
-            </div>
+        {/* Inbox / Messages Icon */}
+        <button
+          onClick={() => navigate(targetVId ? `/verse/${targetVId}/ai` : '/')}
+          className="w-10 h-10 rounded-full bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 shadow-xs flex items-center justify-center cursor-pointer transition-all hover:scale-105 relative"
+          title="AI Inbox & Workspace"
+        >
+          <Mail size={18} />
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-500" />
+        </button>
 
-            <div className="overflow-y-auto max-h-[340px] divide-y divide-[var(--color-border-subtle)]/30">
-              
-              {/* Characters Section */}
-              {charsResults.length > 0 && (
-                <div className="p-1">
-                  <div className="px-2.5 py-1.5 text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Characters ({charsResults.length})
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    {charsResults.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleSelectItem(item.url)}
-                        className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--color-bg-hover)] transition-colors group cursor-pointer"
-                      >
-                        <div className="w-7 h-7 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
-                          <User size={13} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-[13px] font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-accent-highlight)] transition-colors truncate">
-                              {item.title}
-                            </span>
-                            <span className="text-[9px] shrink-0 font-medium px-1.5 py-0.5 rounded-full bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-muted)] truncate max-w-[100px]">
-                              {item.verseName}
-                            </span>
-                          </div>
-                          {item.subtitle && (
-                            <p className="text-[11px] text-[var(--color-text-muted)] truncate mt-0.5 font-normal leading-normal">
-                              {item.subtitle}
-                            </p>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+        {/* Notifications Bell Icon */}
+        <button
+          onClick={openSearchPalette}
+          className="w-10 h-10 rounded-full bg-white/90 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 shadow-xs flex items-center justify-center cursor-pointer transition-all hover:scale-105 relative"
+          title="Notifications & Updates"
+        >
+          <Bell size={18} />
+          <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-slate-800" />
+        </button>
 
-              {/* Lore Section */}
-              {loreResults.length > 0 && (
-                <div className="p-1">
-                  <div className="px-2.5 py-1.5 text-[10px] font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
-                    Lore Entries ({loreResults.length})
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    {loreResults.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => handleSelectItem(item.url)}
-                        className="w-full text-left flex items-start gap-2.5 px-2.5 py-2 rounded-lg hover:bg-[var(--color-bg-hover)] transition-colors group cursor-pointer"
-                      >
-                        <div className="w-7 h-7 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
-                          <BookOpen size={13} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-[13px] font-medium text-[var(--color-text-primary)] group-hover:text-[var(--color-accent-highlight)] transition-colors truncate">
-                              {item.title}
-                            </span>
-                            <span className="text-[9px] shrink-0 font-medium px-1.5 py-0.5 rounded-full bg-[var(--color-bg-base)] border border-[var(--color-border-subtle)] text-[var(--color-text-muted)] truncate max-w-[100px]">
-                              {item.verseName}
-                            </span>
-                          </div>
-                          {item.subtitle && (
-                            <p className="text-[11px] text-[var(--color-text-muted)] truncate mt-0.5 font-normal leading-normal">
-                              {item.subtitle.replace(/<[^>]*>/g, '')}
-                            </p>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Empty placeholder */}
-              {results.length === 0 && (
-                <div className="p-6 text-center text-xs text-[var(--color-text-muted)] flex flex-col items-center justify-center gap-1">
-                  <span className="font-semibold text-[var(--color-text-secondary)]">No results match "{searchVal}"</span>
-                  <span>Try searching character details, lore titles, or summaries.</span>
-                </div>
-              )}
-            </div>
-
-            {/* Quick palette suggestion footer */}
-            <div className="p-2 border-t border-[var(--color-border-subtle)]/40 bg-[var(--color-bg-base)] text-[10px] text-[var(--color-text-muted)] flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                <CornerDownRight size={10} />
-                <span>Press <kbd className="font-mono text-[9px] px-0.5">Esc</kbd> to dismiss</span>
+        {/* Profile / Active Verse Avatar */}
+        <div className="flex items-center gap-2 pl-1">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 via-rose-400 to-indigo-500 p-0.5 shadow-xs cursor-pointer hover:scale-105 transition-transform"
+               onClick={() => navigate('/settings')}>
+            <div className="w-full h-full rounded-full bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
+              <span className="text-xs font-extrabold text-slate-900 dark:text-white uppercase">
+                {currentVerseName ? currentVerseName.charAt(0) : 'U'}
               </span>
-              <button
-                onClick={() => {
-                  setDropdownOpen(false)
-                  openSearchPalette()
-                }}
-                className="hover:text-[var(--color-text-primary)] transition-colors underline focus:outline-none"
-              >
-                Launch full command list (⌘K)
-              </button>
             </div>
-
           </div>
-        )}
+        </div>
       </div>
 
     </header>
